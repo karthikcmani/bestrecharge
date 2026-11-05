@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#0F172A</color>
+    <color name="primary_variant">#1E293B</color>
+    <color name="on_primary">#FFFFFF</color>
+
+    <color name="secondary">#10B981</color>
+    <color name="secondary_variant">#059669</color>
+    <color name="on_secondary">#FFFFFF</color>
+
+    <color name="background">#F8FAFC</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#F1F5F9</color>
+    <color name="on_surface">#0F172A</color>
+    <color name="on_surface_muted">#64748B</color>
+    <color name="border">#E2E8F0</color>
+
+    <!-- Telecom Brand Colors -->
+    <color name="telecom_vi">#FF0033</color>
+    <color name="telecom_jio">#005BFF</color>
+    <color name="telecom_airtel">#EE0000</color>
+    <color name="telecom_bsnl">#008000</color>
+
+    <!-- Savings & Status Colors -->
+    <color name="savings_green">#10B981</color>
+    <color name="savings_green_light">#ECFDF5</color>
+    <color name="savings_green_dark">#065F46</color>
+    <color name="warning_amber">#F59E0B</color>
+    <color name="warning_amber_light">#FFFBEB</color>
+    <color name="error_red">#EF4444</color>
+</resources>

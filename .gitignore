@@ -1,0 +1,39 @@
+# Git Ignore for BestRecharge
+
+# Android & Gradle
+android/.gradle/
+android/build/
+android/*/build/
+android/local.properties
+android/*.iml
+android/*/*.iml
+android/.idea/
+.gradle/
+build/
+*.apk
+*.aab
+
+# Python & Backend
+backend/__pycache__/
+backend/*/__pycache__/
+backend/*/*/__pycache__/
+backend/*/*/*/__pycache__/
+backend/.pytest_cache/
+backend/venv/
+backend/.env
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+*.sqlite3
+*.db
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+.vscode/
+*.log

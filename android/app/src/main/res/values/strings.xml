@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">BestRecharge</string>
+    <string name="app_tagline">Recharge smarter. Save more.</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_compare">Compare</string>
+    <string name="nav_offers">Offers</string>
+    <string name="nav_savings">Savings</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- General -->
+    <string name="currency_symbol">₹</string>
+    <string name="continue_to_recharge">Continue to Recharge</string>
+    <string name="import_screenshot">Import Screenshot</string>
+    <string name="find_best_deal">Find Best Deal</string>
+    <string name="side_by_side_compare">Side-by-Side Compare</string>
+</resources>
