@@ -142,25 +142,13 @@ public class DealCalculator {
         String explanation = expParts.isEmpty() ? "Standard recharge price without active promotional offers."
                 : String.join(" + ", expParts);
 
-        // Action URI
-        String actionIntentUri = "https://www.myvi.in";
-        String actionLabel = "Continue to Recharge";
-        String pLower = providerName.toLowerCase();
-        if (pLower.contains("paytm")) {
-            actionIntentUri = "paytmmp://pay?pa=vi@upi";
-            actionLabel = "Pay with Paytm UPI";
-        } else if (pLower.contains("bhim")) {
-            actionIntentUri = "bhim://upi/pay";
-            actionLabel = "Pay with BHIM UPI";
-        } else if (pLower.contains("phonepe")) {
-            actionIntentUri = "phonepe://pay";
-            actionLabel = "Pay with PhonePe";
-        } else if (pLower.contains("gpay") || pLower.contains("google")) {
-            actionIntentUri = "tez://upi/pay";
-            actionLabel = "Pay with Google Pay";
-        } else if (pLower.contains("amazon")) {
-            actionIntentUri = "amazonpay://pay";
-            actionLabel = "Pay with Amazon Pay";
+        // Action labels directed to provider app
+        String actionIntentUri = "provider://recharge";
+        String actionLabel = "Recharge in Official App";
+        if (opOffer != null && opOffer.provider != null) {
+            actionLabel = "Recharge in " + opOffer.provider + " App";
+        } else if (payOffer != null) {
+            actionLabel = "Recharge via " + providerName;
         }
 
         return new DealBreakdown(

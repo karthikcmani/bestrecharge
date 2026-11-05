@@ -24,10 +24,10 @@ public class BestRechargeApp extends Application {
         Executors.newSingleThreadExecutor().execute(() -> {
             AppDatabase db = AppDatabase.getInstance(this);
             if (db.simProfileDao().getAllSimProfiles().isEmpty()) {
-                // 1. Seed Primary SIM (matching screenshot: 98478 37607, Vi, Delhi)
+                // 1. Seed Primary SIM (SIM 1)
                 SimProfileEntity sim1 = new SimProfileEntity(
                         "sim_default_1",
-                        "98478 37607",
+                        "9847837607",
                         "VI",
                         "Vodafone Idea (Vi)",
                         "DL",
@@ -36,20 +36,8 @@ public class BestRechargeApp extends Application {
                         true,
                         true
                 );
-                SimProfileEntity sim2 = new SimProfileEntity(
-                        "sim_default_2",
-                        "98101 23456",
-                        "JIO",
-                        "Reliance Jio",
-                        "DL",
-                        "Delhi NCR",
-                        "SIM 2",
-                        true,
-                        false
-                );
                 List<SimProfileEntity> sims = new ArrayList<>();
                 sims.add(sim1);
-                sims.add(sim2);
                 db.simProfileDao().insertAll(sims);
 
                 // 2. Seed Plans

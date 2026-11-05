@@ -25,19 +25,22 @@
 
     <!-- Mobile Number Input -->
     <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/til_dialog_mobile"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:hint="Enter 10-digit Mobile Number"
+        android:hint="Mobile Number"
+        app:endIconMode="clear_text"
+        app:helperText="Enter 10-digit prepaid/postpaid mobile number"
         app:prefixText="+91 ">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_dialog_mobile_number"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="phone"
-            android:maxLength="10" />
+            android:inputType="number"
+            android:maxLength="12" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Provider Selection -->

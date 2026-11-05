@@ -58,7 +58,9 @@ public class ChangeNumberDialog extends Dialog {
         // Pre-fill existing data if available
         if (currentSim != null) {
             if (currentSim.mobileNumber != null && !currentSim.mobileNumber.isEmpty()) {
-                binding.etDialogMobileNumber.setText(currentSim.mobileNumber);
+                String cleaned = currentSim.mobileNumber.replaceAll("[^0-9]", "");
+                binding.etDialogMobileNumber.setText(cleaned);
+                binding.etDialogMobileNumber.setSelection(cleaned.length());
             }
             if ("JIO".equalsIgnoreCase(currentSim.operatorCode)) {
                 binding.rbDialogJio.setChecked(true);
@@ -70,6 +72,26 @@ public class ChangeNumberDialog extends Dialog {
                 binding.rbDialogVi.setChecked(true);
             }
         }
+
+        binding.etDialogMobileNumber.addTextChangedListener(new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s != null && s.length() >= 4) {
+                    String prefix = s.toString().substring(0, 4);
+                    // Quick suggestion based on common prefixes if user hasn't ported
+                    if (prefix.startsWith("9847") || prefix.startsWith("9846") || prefix.startsWith("9820")) {
+                        binding.rbDialogVi.setChecked(true);
+                    } else if (prefix.startsWith("9810") || prefix.startsWith("9811") || prefix.startsWith("9845")) {
+                        binding.rbDialogAirtel.setChecked(true);
+                    } else if (prefix.startsWith("700") || prefix.startsWith("799") || prefix.startsWith("890") || prefix.startsWith("630")) {
+                        binding.rbDialogJio.setChecked(true);
+                    } else if (prefix.startsWith("944") || prefix.startsWith("943")) {
+                        binding.rbDialogBsnl.setChecked(true);
+                    }
+                }
+            }
+            @Override public void afterTextChanged(android.text.Editable s) {}
+        });
 
         binding.btnDialogCancel.setOnClickListener(v -> dismiss());
 

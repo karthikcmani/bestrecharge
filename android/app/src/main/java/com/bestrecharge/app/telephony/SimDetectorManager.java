@@ -114,6 +114,13 @@ public class SimDetectorManager {
                         number = "";
                     }
 
+                    if (number.isEmpty()) {
+                        SimProfileEntity existing = AppDatabase.getInstance(context).simProfileDao().getPrimarySimProfile();
+                        if (existing != null && existing.mobileNumber != null && !existing.mobileNumber.isEmpty()) {
+                            number = existing.mobileNumber;
+                        }
+                    }
+
                     boolean isPrimary = (i == 0);
                     SimProfileEntity simProfile = new SimProfileEntity(
                             "sim_device_" + (i + 1),
@@ -140,7 +147,10 @@ public class SimDetectorManager {
 
     private static void persistSims(Context context, List<SimProfileEntity> sims) {
         AppDatabase db = AppDatabase.getInstance(context);
-        for (SimProfileEntity s : sims) {
+        db.simProfileDao().deleteAllSims();
+        for (int i = 0; i < sims.size(); i++) {
+            SimProfileEntity s = sims.get(i);
+            s.isPrimary = (i == 0);
             db.simProfileDao().insertOrUpdate(s);
         }
     }

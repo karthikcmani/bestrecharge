@@ -126,13 +126,24 @@ public class HomeFragment extends Fragment {
                 ((MainActivity) getActivity()).navigateToTab(R.id.navigation_offers);
             }
         });
+
+        // Automatically detect device SIM on startup if permission is already granted
+        if (getContext() != null && SimDetectorManager.hasTelephonyPermissions(getContext())) {
+            detectDeviceSims();
+        }
     }
 
     private void bindSimDetails(SimProfileEntity sim) {
         binding.tvSimSlot.setText(sim.simSlot != null ? sim.simSlot.toUpperCase() : "ACTIVE RECHARGE");
-        String numberDisplay = sim.mobileNumber != null && !sim.mobileNumber.isEmpty()
-                ? "+91 " + sim.mobileNumber
-                : "No Number Set (Tap Change)";
+        String rawNum = sim.mobileNumber != null ? sim.mobileNumber.replaceAll("[^0-9]", "") : "";
+        String numberDisplay;
+        if (rawNum.length() == 10) {
+            numberDisplay = "+91 " + rawNum.substring(0, 5) + " " + rawNum.substring(5);
+        } else if (!rawNum.isEmpty()) {
+            numberDisplay = "+91 " + rawNum;
+        } else {
+            numberDisplay = "No Number Set (Tap Change)";
+        }
         binding.tvMobileNumber.setText(numberDisplay);
         binding.tvOperatorCircle.setText(sim.operatorName + " • " + sim.circleName + (sim.isPrepaid ? " (Prepaid)" : " (Postpaid)"));
 

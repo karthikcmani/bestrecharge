@@ -146,41 +146,47 @@ public class BestDealActivity extends AppCompatActivity {
     }
 
     private void recordAndOpenPayment(DealBreakdown deal) {
-        // 1. Log transaction in local Room savings history
-        String mobile = primarySim != null ? primarySim.mobileNumber : "98478 37607";
+        String mobile = primarySim != null && primarySim.mobileNumber != null ? primarySim.mobileNumber : "9847837607";
         String operator = activePlan != null ? activePlan.operatorName : "Vi";
-        String circle = primarySim != null ? primarySim.circleName : "Delhi NCR";
+        String opCode = activePlan != null && activePlan.operatorCode != null ? activePlan.operatorCode : "VI";
+        String circle = primarySim != null && primarySim.circleName != null ? primarySim.circleName : "Delhi NCR";
         String planName = activePlan != null ? activePlan.description : "Mobile Recharge";
         String dateStr = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(new Date());
 
-        SavingsRecordEntity record = new SavingsRecordEntity(
-                "rec_" + UUID.randomUUID().toString().substring(0, 8),
-                mobile, operator, circle, planName,
-                deal.originalMrp, deal.operatorDiscount, deal.immediatePayable,
-                deal.recommendedPaymentProvider,
-                deal.stackedOffers != null && !deal.stackedOffers.isEmpty() ? deal.stackedOffers.get(0) : "Smart Offer",
-                deal.guaranteedCashback > 0 ? deal.guaranteedCashback : deal.potentialCashback,
-                0.0, "PENDING", deal.potentialEffectiveCost, dateStr,
-                "Initiated via BestRecharge intelligence engine."
-        );
+        String opAppName = "JIO".equalsIgnoreCase(opCode) ? "MyJio App" :
+                "AIRTEL".equalsIgnoreCase(opCode) ? "Airtel Thanks" :
+                "BSNL".equalsIgnoreCase(opCode) ? "BSNL Portal" : "Vi App";
 
-        new SavingsRepository(getApplication()).insertRecord(record);
+        // Show clear, actionable provider handover instructions
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Recharge via " + opAppName)
+                .setMessage("Number: +91 " + mobile + "\n" +
+                        "Plan: ₹" + (int) deal.originalMrp + "\n\n" +
+                        "Instructions:\n" +
+                        "1. Opening " + opAppName + " recharge flow.\n" +
+                        (deal.operatorDiscount > 0 ? "2. Apply ₹" + (int) deal.operatorDiscount + " app-exclusive discount.\n" : "") +
+                        "3. Select " + deal.recommendedPaymentProvider + " on the payment screen to get your ₹" +
+                        (int) (deal.guaranteedCashback > 0 ? deal.guaranteedCashback : deal.potentialCashback) + " cashback credited to your account!")
+                .setPositiveButton("Open " + opAppName, (dialog, which) -> {
+                    // 1. Log transaction in local Room savings history
+                    SavingsRecordEntity record = new SavingsRecordEntity(
+                            "rec_" + UUID.randomUUID().toString().substring(0, 8),
+                            mobile, operator, circle, planName,
+                            deal.originalMrp, deal.operatorDiscount, deal.immediatePayable,
+                            deal.recommendedPaymentProvider,
+                            deal.stackedOffers != null && !deal.stackedOffers.isEmpty() ? deal.stackedOffers.get(0) : "Smart Offer",
+                            deal.guaranteedCashback > 0 ? deal.guaranteedCashback : deal.potentialCashback,
+                            0.0, "PENDING", deal.potentialEffectiveCost, dateStr,
+                            "Initiated via " + opAppName + " with " + deal.recommendedPaymentProvider
+                    );
+                    new SavingsRepository(getApplication()).insertRecord(record);
 
-        // 2. Open payment app via intent
-        try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(deal.actionIntentUri));
-            startActivity(intent);
-        } catch (Exception e) {
-            // Fallback to web portal if specific UPI app intent is not installed
-            Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.myvi.in"));
-            try {
-                startActivity(webIntent);
-            } catch (Exception ignored) {
-                Toast.makeText(this, "Please open " + deal.recommendedPaymentProvider + " to complete payment.", Toast.LENGTH_LONG).show();
-            }
-        }
-
-        Toast.makeText(this, "Recharge initiated. Transaction logged to Savings Tracker!", Toast.LENGTH_SHORT).show();
-        finish();
+                    // 2. Launch provider app directly
+                    openOfficialTelecomApp(opCode);
+                    Toast.makeText(this, "Opening " + opAppName + ". Transaction logged to Savings!", Toast.LENGTH_SHORT).show();
+                    finish();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 }

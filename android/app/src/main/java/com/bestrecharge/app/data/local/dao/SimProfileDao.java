@@ -40,4 +40,10 @@ public interface SimProfileDao {
 
     @Query("UPDATE sim_profiles SET isPrimary = 1 WHERE id = :simId")
     void setPrimary(String simId);
+
+    @Query("DELETE FROM sim_profiles WHERE id LIKE 'sim_default_%'")
+    void clearDummySims();
+
+    @Query("DELETE FROM sim_profiles")
+    void deleteAllSims();
 }

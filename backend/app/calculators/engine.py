@@ -203,25 +203,13 @@ class OfferCalculationEngine:
 
         explanation = " + ".join(explanation_parts) if explanation_parts else "Standard recharge price with no additional promotional discounts."
 
-        # Action URI
+        # Action URI and label
         action_intent_uri = "https://www.myvi.in"
-        action_label = "Continue to Recharge"
-        provider_lower = provider_name.lower()
-        if "paytm" in provider_lower:
-            action_intent_uri = "paytmmp://pay?pa=vi@upi"
-            action_label = "Pay with Paytm UPI"
-        elif "bhim" in provider_lower:
-            action_intent_uri = "bhim://upi/pay"
-            action_label = "Pay with BHIM UPI"
-        elif "phonepe" in provider_lower:
-            action_intent_uri = "phonepe://pay"
-            action_label = "Pay with PhonePe"
-        elif "gpay" in provider_lower or "google" in provider_lower:
-            action_intent_uri = "tez://upi/pay"
-            action_label = "Pay with Google Pay"
-        elif "amazon" in provider_lower:
-            action_intent_uri = "amazonpay://pay"
-            action_label = "Pay with Amazon Pay"
+        action_label = "Recharge in Official App"
+        if operator_offer and getattr(operator_offer, "provider", None):
+            action_label = f"Recharge in {getattr(operator_offer, 'provider')} App"
+        elif payment_offer:
+            action_label = f"Recharge via {provider_name}"
 
         return {
             "original_mrp": original_mrp,
