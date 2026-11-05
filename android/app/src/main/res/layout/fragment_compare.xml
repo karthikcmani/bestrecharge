@@ -36,6 +36,36 @@
                 android:textColor="@color/on_surface_muted"
                 android:textSize="12sp" />
 
+            <!-- Active Number / Switch Strip -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@color/surface_variant"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="6dp">
+
+                <TextView
+                    android:id="@+id/tv_compare_active_sim"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Checking for: Vi (+91 98478 37607)"
+                    android:textColor="@color/primary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_compare_change_number"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:text="Change Number"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
             <!-- Operator Filter Chips -->
             <HorizontalScrollView
                 android:layout_width="match_parent"

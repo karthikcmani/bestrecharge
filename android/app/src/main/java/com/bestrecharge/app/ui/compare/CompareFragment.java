@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.bestrecharge.app.R;
 import com.bestrecharge.app.data.local.entities.RechargePlanEntity;
+import com.bestrecharge.app.data.local.entities.SimProfileEntity;
 import com.bestrecharge.app.databinding.DialogComparePlansBinding;
 import com.bestrecharge.app.databinding.FragmentCompareBinding;
 import com.bestrecharge.app.ui.deals.BestDealActivity;
@@ -31,6 +32,7 @@ public class CompareFragment extends Fragment implements PlanAdapter.OnPlanActio
     private PlanAdapter adapter;
     private List<RechargePlanEntity> currentPlans = new ArrayList<>();
     private List<RechargePlanEntity> selectedForCompare = new ArrayList<>();
+    private SimProfileEntity activeSim;
 
     @Nullable
     @Override
@@ -72,6 +74,26 @@ public class CompareFragment extends Fragment implements PlanAdapter.OnPlanActio
         });
 
         binding.btnTriggerCompare.setOnClickListener(v -> showComparisonDialog());
+
+        new com.bestrecharge.app.data.repository.SimRepository(requireActivity().getApplication())
+                .getPrimarySimProfile()
+                .observe(getViewLifecycleOwner(), sim -> {
+                    if (sim != null) {
+                        activeSim = sim;
+                        binding.tvCompareActiveSim.setText("Checking for: " + sim.operatorName + " (+91 " + (sim.mobileNumber != null ? sim.mobileNumber : "") + ")");
+                    }
+                });
+
+        binding.btnCompareChangeNumber.setOnClickListener(v -> {
+            if (getContext() != null) {
+                new com.bestrecharge.app.ui.dialogs.ChangeNumberDialog(getContext(), activeSim, selectedSim -> {
+                    activeSim = selectedSim;
+                    binding.tvCompareActiveSim.setText("Checking for: " + selectedSim.operatorName + " (+91 " + selectedSim.mobileNumber + ")");
+                    // Auto-filter by new operator
+                    filterByOperator(selectedSim.operatorCode);
+                }).show();
+            }
+        });
     }
 
     private void filterByOperator(String operatorCode) {

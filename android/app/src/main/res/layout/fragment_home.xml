@@ -16,9 +16,9 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
+            android:orientation="horizontal"
+            android:layout_marginBottom="14dp">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -53,12 +53,12 @@
                 app:iconTint="@color/primary" />
         </LinearLayout>
 
-        <!-- Active SIM Card -->
+        <!-- Active SIM & Mobile Number Card -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/card_active_sim"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             app:cardBackgroundColor="@color/primary"
             app:cardCornerRadius="16dp"
             app:cardElevation="2dp">
@@ -87,30 +87,47 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_weight="1"
-                        android:text="PRIMARY SIM 1"
+                        android:text="ACTIVE RECHARGE NUMBER"
                         android:textColor="#94A3B8"
-                        android:textSize="12sp"
+                        android:textSize="11sp"
                         android:textStyle="bold" />
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_switch_sim"
+                        android:id="@+id/btn_auto_detect_sim"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Switch SIM"
+                        android:text="Detect SIM"
                         android:textColor="@color/secondary"
                         android:textSize="12sp" />
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tv_mobile_number"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="+91 98478 37607"
-                    android:textColor="@color/on_primary"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tv_mobile_number"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="+91 98478 37607"
+                        android:textColor="@color/on_primary"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_change_number"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:text="Change"
+                        android:textColor="@color/primary"
+                        android:textSize="12sp" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -123,23 +140,51 @@
                         android:id="@+id/tv_operator_circle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/ic_check_circle"
-                        android:backgroundTint="#334155"
+                        android:background="#334155"
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="4dp"
-                        android:text="Vi • Delhi NCR (Prepaid)"
+                        android:text="Vodafone Idea (Vi) • Delhi NCR (Prepaid)"
                         android:textColor="@color/on_primary"
-                        android:textSize="13sp" />
+                        android:textSize="12sp" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Flagship Hero: Best Deal Recommendation -->
+        <!-- Official App Live Verification Action Strip -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_live_sync_status"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="● Live sync active"
+                android:textColor="@color/savings_green"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_open_official_app"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Check in Vi App"
+                android:textColor="@color/primary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- Flagship Hero: Top Recommended Deal -->
         <TextView
+            android:id="@+id/tv_top_deal_heading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:text="TOP RECOMMENDED DEAL"
+            android:text="TOP RECOMMENDED DEAL FOR VI"
             android:textColor="@color/primary"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -169,6 +214,7 @@
                     android:orientation="horizontal">
 
                     <TextView
+                        android:id="@+id/tv_deal_badge_label"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@color/savings_green_light"
@@ -185,6 +231,7 @@
                         android:layout_weight="1" />
 
                     <TextView
+                        android:id="@+id/tv_deal_save_amount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Save ₹140"

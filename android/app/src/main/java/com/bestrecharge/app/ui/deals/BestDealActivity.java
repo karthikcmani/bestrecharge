@@ -99,12 +99,50 @@ public class BestDealActivity extends AppCompatActivity {
         binding.tvDetailExplanation.setText(deal.explanation);
         binding.btnContinueToRecharge.setText(deal.actionLabel != null ? deal.actionLabel : "Continue to Recharge");
 
+        binding.btnDetailVerifyOfficial.setOnClickListener(v -> {
+            if (activePlan != null) {
+                openOfficialTelecomApp(activePlan.operatorCode);
+            }
+        });
+
         binding.cardAltBhim.setOnClickListener(v -> {
             Toast.makeText(this, "Selected BHIM alternative deal", Toast.LENGTH_SHORT).show();
         });
         binding.cardAltPhonepe.setOnClickListener(v -> {
             Toast.makeText(this, "Selected PhonePe alternative deal", Toast.LENGTH_SHORT).show();
         });
+    }
+
+    private void openOfficialTelecomApp(String opCode) {
+        String op = opCode != null ? opCode.toUpperCase() : "VI";
+        String packageName = "com.mventus.selfcare.activity";
+        String webUrl = "https://www.myvi.in/prepaid/best-prepaid-plans";
+
+        if ("JIO".equals(op)) {
+            packageName = "com.jio.myjio";
+            webUrl = "https://www.jio.com/selfcare/plans/mobility/prepaid-plans-list/";
+        } else if ("AIRTEL".equals(op)) {
+            packageName = "com.myairtelapp";
+            webUrl = "https://www.airtel.in/recharge-online";
+        } else if ("BSNL".equals(op)) {
+            packageName = "in.co.bsnl";
+            webUrl = "https://portal2.bsnl.in/myportal/tariffs.do";
+        }
+
+        try {
+            Intent intent = getPackageManager().getLaunchIntentForPackage(packageName);
+            if (intent != null) {
+                startActivity(intent);
+                return;
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(webUrl));
+            startActivity(browserIntent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Cannot open official portal", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void recordAndOpenPayment(DealBreakdown deal) {
