@@ -17,6 +17,7 @@ import com.bestrecharge.app.databinding.ActivityBestDealBinding;
 import com.bestrecharge.app.engine.DealBreakdown;
 import com.bestrecharge.app.engine.DealCalculator;
 import com.bestrecharge.app.engine.UserPreferences;
+import com.bestrecharge.app.utils.TelecomRedirectionHelper;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -101,7 +102,14 @@ public class BestDealActivity extends AppCompatActivity {
 
         binding.btnDetailVerifyOfficial.setOnClickListener(v -> {
             if (activePlan != null) {
-                openOfficialTelecomApp(activePlan.operatorCode);
+                String mobile = primarySim != null && primarySim.mobileNumber != null ? primarySim.mobileNumber : "9847837607";
+                TelecomRedirectionHelper.redirectToRechargeCheckout(
+                        this,
+                        activePlan.operatorCode,
+                        mobile,
+                        activePlan.price,
+                        "Verify official plan ₹" + (int) activePlan.price
+                );
             }
         });
 
@@ -114,35 +122,9 @@ public class BestDealActivity extends AppCompatActivity {
     }
 
     private void openOfficialTelecomApp(String opCode) {
-        String op = opCode != null ? opCode.toUpperCase() : "VI";
-        String packageName = "com.mventus.selfcare.activity";
-        String webUrl = "https://www.myvi.in/prepaid/best-prepaid-plans";
-
-        if ("JIO".equals(op)) {
-            packageName = "com.jio.myjio";
-            webUrl = "https://www.jio.com/selfcare/plans/mobility/prepaid-plans-list/";
-        } else if ("AIRTEL".equals(op)) {
-            packageName = "com.myairtelapp";
-            webUrl = "https://www.airtel.in/recharge-online";
-        } else if ("BSNL".equals(op)) {
-            packageName = "in.co.bsnl";
-            webUrl = "https://portal2.bsnl.in/myportal/tariffs.do";
-        }
-
-        try {
-            Intent intent = getPackageManager().getLaunchIntentForPackage(packageName);
-            if (intent != null) {
-                startActivity(intent);
-                return;
-            }
-        } catch (Exception ignored) {}
-
-        try {
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(webUrl));
-            startActivity(browserIntent);
-        } catch (Exception e) {
-            Toast.makeText(this, "Cannot open official portal", Toast.LENGTH_SHORT).show();
-        }
+        String mobile = primarySim != null && primarySim.mobileNumber != null ? primarySim.mobileNumber : "9847837607";
+        double price = activePlan != null ? activePlan.price : 349.0;
+        TelecomRedirectionHelper.redirectToRechargeCheckout(this, opCode, mobile, price, null);
     }
 
     private void recordAndOpenPayment(DealBreakdown deal) {
@@ -181,9 +163,18 @@ public class BestDealActivity extends AppCompatActivity {
                     );
                     new SavingsRepository(getApplication()).insertRecord(record);
 
-                    // 2. Launch provider app directly
-                    openOfficialTelecomApp(opCode);
-                    Toast.makeText(this, "Opening " + opAppName + ". Transaction logged to Savings!", Toast.LENGTH_SHORT).show();
+                    // 2. Launch provider app directly to checkout page
+                    String promoSummary = "Recharge ₹" + (int) deal.originalMrp + " for +91 " + mobile +
+                            (deal.operatorDiscount > 0 ? " | Save ₹" + (int) deal.operatorDiscount : "") +
+                            " | Pay with " + deal.recommendedPaymentProvider + " for ₹" +
+                            (int) (deal.guaranteedCashback > 0 ? deal.guaranteedCashback : deal.potentialCashback) + " cashback";
+                    TelecomRedirectionHelper.redirectToRechargeCheckout(
+                            this,
+                            opCode,
+                            mobile,
+                            deal.originalMrp,
+                            promoSummary
+                    );
                     finish();
                 })
                 .setNegativeButton("Cancel", null)

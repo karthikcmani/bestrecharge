@@ -25,6 +25,7 @@ import com.bestrecharge.app.ui.deals.BestDealActivity;
 import com.bestrecharge.app.ui.dialogs.ChangeNumberDialog;
 import com.bestrecharge.app.ui.main.MainActivity;
 import com.bestrecharge.app.ui.ocr.ScreenshotImportActivity;
+import com.bestrecharge.app.utils.TelecomRedirectionHelper;
 
 import java.util.List;
 
@@ -263,36 +264,14 @@ public class HomeFragment extends Fragment {
     private void openOfficialTelecomApp() {
         if (currentSim == null || getContext() == null) return;
         String op = currentSim.operatorCode != null ? currentSim.operatorCode.toUpperCase() : "VI";
-
-        String packageName = "com.mventus.selfcare.activity"; // Vi App
-        String webUrl = "https://www.myvi.in/prepaid/best-prepaid-plans";
-
-        if ("JIO".equals(op)) {
-            packageName = "com.jio.myjio";
-            webUrl = "https://www.jio.com/selfcare/plans/mobility/prepaid-plans-list/";
-        } else if ("AIRTEL".equals(op)) {
-            packageName = "com.myairtelapp";
-            webUrl = "https://www.airtel.in/recharge-online";
-        } else if ("BSNL".equals(op)) {
-            packageName = "in.co.bsnl";
-            webUrl = "https://portal2.bsnl.in/myportal/tariffs.do";
-        }
-
-        try {
-            Intent intent = getContext().getPackageManager().getLaunchIntentForPackage(packageName);
-            if (intent != null) {
-                startActivity(intent);
-                return;
-            }
-        } catch (Exception ignored) {}
-
-        // Fallback to official web portal
-        try {
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(webUrl));
-            startActivity(browserIntent);
-        } catch (Exception e) {
-            Toast.makeText(getContext(), "Cannot open official portal", Toast.LENGTH_SHORT).show();
-        }
+        String mobile = currentSim.mobileNumber != null ? currentSim.mobileNumber : "9847837607";
+        TelecomRedirectionHelper.redirectToRechargeCheckout(
+                requireContext(),
+                op,
+                mobile,
+                349.0,
+                "Check verified " + op + " plans and app-exclusive offers"
+        );
     }
 
     @Override
