@@ -151,24 +151,29 @@ public class BestDealActivity extends AppCompatActivity {
                 "AIRTEL".equalsIgnoreCase(opCode) ? "Airtel Thanks" :
                 "BSNL".equalsIgnoreCase(opCode) ? "BSNL Portal" : "Vi App";
 
-        // Show clear, actionable provider handover instructions
+        String couponText = (deal.stackedOffers != null && !deal.stackedOffers.isEmpty()) ? deal.stackedOffers.get(0) : "RECHARGE";
+
+        // Show clear, actionable provider handover instructions with dual checkout paths
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("Recharge via " + opAppName)
                 .setMessage("Number: +91 " + mobile + "\n" +
-                        "Plan: ₹" + (int) deal.originalMrp + "\n\n" +
-                        "Instructions:\n" +
-                        "1. Opening " + opAppName + " recharge flow.\n" +
-                        (deal.operatorDiscount > 0 ? "2. Apply ₹" + (int) deal.operatorDiscount + " app-exclusive discount.\n" : "") +
-                        "3. Select " + deal.recommendedPaymentProvider + " on the payment screen to get your ₹" +
-                        (int) (deal.guaranteedCashback > 0 ? deal.guaranteedCashback : deal.potentialCashback) + " cashback credited to your account!")
-                .setPositiveButton("Open " + opAppName, (dialog, which) -> {
+                        "Plan: ₹" + (int) deal.originalMrp + "\n" +
+                        "Immediate Amount: ₹" + (int) deal.immediatePayable + "\n" +
+                        "Effective Cost: ₹" + (int) deal.potentialEffectiveCost + "\n\n" +
+                        "Smart Handover Instructions:\n" +
+                        "1. BestRecharge automatically opens " + opAppName + " and navigates directly to the ₹" + (int) deal.originalMrp + " checkout page.\n" +
+                        (deal.operatorDiscount > 0 ? "2. Apply ₹" + (int) deal.operatorDiscount + " instant discount.\n" : "") +
+                        "3. Select " + deal.recommendedPaymentProvider + " on the payment screen to get ₹" +
+                        (int) (deal.guaranteedCashback > 0 ? deal.guaranteedCashback : deal.potentialCashback) + " cashback credited to your account!\n\n" +
+                        "💡 Tip: Offer & promo details have been copied to your clipboard.")
+                .setPositiveButton("Auto-Checkout in " + opAppName, (dialog, which) -> {
                     // 1. Log transaction in local Room savings history
                     SavingsRecordEntity record = new SavingsRecordEntity(
                             "rec_" + UUID.randomUUID().toString().substring(0, 8),
                             mobile, operator, circle, planName,
                             deal.originalMrp, deal.operatorDiscount, deal.immediatePayable,
                             deal.recommendedPaymentProvider,
-                            deal.stackedOffers != null && !deal.stackedOffers.isEmpty() ? deal.stackedOffers.get(0) : "Smart Offer",
+                            couponText,
                             deal.guaranteedCashback > 0 ? deal.guaranteedCashback : deal.potentialCashback,
                             0.0, "PENDING", deal.potentialEffectiveCost, dateStr,
                             "Initiated via " + opAppName + " with " + deal.recommendedPaymentProvider
@@ -176,17 +181,50 @@ public class BestDealActivity extends AppCompatActivity {
                     new SavingsRepository(getApplication()).insertRecord(record);
                     com.bestrecharge.app.BestRechargeApp.pendingCelebrationRecord = record;
 
-                    // 2. Launch provider app directly to checkout page
-                    String promoSummary = "Recharge ₹" + (int) deal.originalMrp + " for +91 " + mobile +
-                            (deal.operatorDiscount > 0 ? " | Save ₹" + (int) deal.operatorDiscount : "") +
-                            " | Pay with " + deal.recommendedPaymentProvider + " for ₹" +
-                            (int) (deal.guaranteedCashback > 0 ? deal.guaranteedCashback : deal.potentialCashback) + " cashback";
-                    TelecomRedirectionHelper.redirectToRechargeCheckout(
+                    // 2. Start automated checkout in provider app if accessibility is active
+                    if (com.bestrecharge.app.inspection.ProviderInspectionService.isServiceRunning()) {
+                        com.bestrecharge.app.inspection.ProviderInspectionManager.getInstance(this)
+                                .startCheckoutAutomation(
+                                        opCode,
+                                        mobile,
+                                        deal.originalMrp,
+                                        deal.recommendedPaymentProvider,
+                                        couponText
+                                );
+                    } else {
+                        String promoSummary = "Recharge ₹" + (int) deal.originalMrp + " for +91 " + mobile +
+                                (deal.operatorDiscount > 0 ? " | Save ₹" + (int) deal.operatorDiscount : "") +
+                                " | Pay with " + deal.recommendedPaymentProvider + " for ₹" +
+                                (int) (deal.guaranteedCashback > 0 ? deal.guaranteedCashback : deal.potentialCashback) + " cashback";
+                        TelecomRedirectionHelper.redirectToRechargeCheckout(
+                                this,
+                                opCode,
+                                mobile,
+                                deal.originalMrp,
+                                promoSummary
+                        );
+                    }
+                })
+                .setNeutralButton("Direct Web Checkout", (dialog, which) -> {
+                    // Direct 1-tap browser checkout with phone & plan pre-filled
+                    SavingsRecordEntity record = new SavingsRecordEntity(
+                            "rec_" + UUID.randomUUID().toString().substring(0, 8),
+                            mobile, operator, circle, planName,
+                            deal.originalMrp, deal.operatorDiscount, deal.immediatePayable,
+                            deal.recommendedPaymentProvider,
+                            couponText,
+                            deal.guaranteedCashback > 0 ? deal.guaranteedCashback : deal.potentialCashback,
+                            0.0, "PENDING", deal.potentialEffectiveCost, dateStr,
+                            "Web checkout with " + deal.recommendedPaymentProvider
+                    );
+                    new SavingsRepository(getApplication()).insertRecord(record);
+                    com.bestrecharge.app.BestRechargeApp.pendingCelebrationRecord = record;
+
+                    TelecomRedirectionHelper.openDirectWebCheckout(
                             this,
                             opCode,
                             mobile,
-                            deal.originalMrp,
-                            promoSummary
+                            deal.originalMrp
                     );
                 })
                 .setNegativeButton("Cancel", null)

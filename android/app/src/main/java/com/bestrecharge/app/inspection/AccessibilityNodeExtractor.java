@@ -25,6 +25,10 @@ public class AccessibilityNodeExtractor {
         public boolean isEditable = false;
         public boolean isPassword = false;
         public Rect bounds = new Rect();
+        public int top = 0;
+        public int bottom = 0;
+        public int left = 0;
+        public int right = 0;
 
         public String getEffectiveLabel() {
             if (text != null && !text.trim().isEmpty()) {
@@ -121,6 +125,10 @@ public class AccessibilityNodeExtractor {
         elem.isPassword = node.isPassword();
 
         node.getBoundsInScreen(elem.bounds);
+        elem.top = elem.bounds.top;
+        elem.bottom = elem.bounds.bottom;
+        elem.left = elem.bounds.left;
+        elem.right = elem.bounds.right;
 
         // Check for sensitive auth or banking screens (Section 6.5 & 14)
         String combinedLabel = (elem.text + " " + elem.contentDescription + " " + elem.resourceId).toLowerCase();

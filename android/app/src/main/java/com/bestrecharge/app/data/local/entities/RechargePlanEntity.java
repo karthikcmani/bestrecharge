@@ -48,4 +48,17 @@ public class RechargePlanEntity {
         this.lastVerified = lastVerified;
         this.isActive = isActive;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RechargePlanEntity that = (RechargePlanEntity) o;
+        return id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
 }

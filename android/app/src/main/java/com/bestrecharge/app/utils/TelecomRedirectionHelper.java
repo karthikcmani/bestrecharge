@@ -133,11 +133,29 @@ public class TelecomRedirectionHelper {
         }
 
         // 2. Fallback to Official Web Checkout Portal (e.g. if app is not installed or unable to handle intent)
+        return openDirectWebCheckout(context, op, mobile, amount);
+    }
+
+    public static boolean openDirectWebCheckout(Context context, String opCode, String mobile, double amount) {
+        String cleanNum = clean10DigitNumber(mobile);
+        int amtInt = (int) Math.round(amount);
+        String op = opCode != null ? opCode.trim().toUpperCase() : "VI";
+        String url;
+        if ("JIO".equals(op)) {
+            url = "https://www.jio.com/selfcare/recharge/mobility/?msisdn=" + cleanNum + "&amount=" + amtInt;
+        } else if ("AIRTEL".equals(op)) {
+            url = "https://www.airtel.in/recharge-online?number=" + cleanNum + "&amount=" + amtInt;
+        } else if ("BSNL".equals(op)) {
+            url = "https://portal2.bsnl.in/myportal/tariffs.do";
+        } else {
+            url = "https://www.myvi.in/prepaid/online-mobile-recharge?mobileNumber=" + cleanNum + "&amount=" + amtInt;
+        }
+
         try {
-            Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(webCheckoutUrl));
+            Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             webIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(webIntent);
-            showToast(context, "Opening official online checkout for " + mobile);
+            showToast(context, "Opening official online checkout for " + cleanNum);
             return true;
         } catch (Exception e) {
             Log.e(TAG, "Cannot launch web portal: " + e.getMessage());

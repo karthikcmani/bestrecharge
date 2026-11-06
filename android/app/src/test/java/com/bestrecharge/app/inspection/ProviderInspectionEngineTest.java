@@ -135,6 +135,87 @@ public class ProviderInspectionEngineTest {
     }
 
     @Test
+    public void testScreenContentParserExtractsCoupons() {
+        AccessibilityNodeExtractor.ScreenSnapshot snapshot = new AccessibilityNodeExtractor.ScreenSnapshot();
+        AccessibilityNodeExtractor.ExtractedElement e1 = new AccessibilityNodeExtractor.ExtractedElement();
+        e1.text = "Special Offer: Use code VIRECH20 to get ₹20 discount on recharge";
+        snapshot.elements.add(e1);
+
+        List<OfferEntity> offers = ScreenContentParser.extractOffers(snapshot, "VI");
+        assertNotNull(offers);
+        assertFalse(offers.isEmpty());
+
+        boolean foundCoupon = false;
+        for (OfferEntity o : offers) {
+            if ("COUPON_CODE".equals(o.category) && o.title.contains("VIRECH20")) {
+                foundCoupon = true;
+                assertEquals(20.0, o.discountAmount, 0.01);
+                assertEquals("VIRECH20", o.paymentMethodRequired);
+                break;
+            }
+        }
+        assertTrue("Coupon VIRECH20 should be parsed as COUPON_CODE", foundCoupon);
+    }
+
+    @Test
+    public void testScreenContentParserExtractsMultipleCardsIndependently() {
+        AccessibilityNodeExtractor.ScreenSnapshot snapshot = new AccessibilityNodeExtractor.ScreenSnapshot();
+
+        // Card 1: BHIM UPI at top (y: 100 to 250)
+        AccessibilityNodeExtractor.ExtractedElement c1e1 = new AccessibilityNodeExtractor.ExtractedElement();
+        c1e1.text = "BHIM Payments App";
+        c1e1.top = 100;
+        snapshot.elements.add(c1e1);
+
+        AccessibilityNodeExtractor.ExtractedElement c1e2 = new AccessibilityNodeExtractor.ExtractedElement();
+        c1e2.text = "Flat ₹30 cashback on min transaction value of ₹99";
+        c1e2.top = 170;
+        snapshot.elements.add(c1e2);
+
+        // Card 2: Paytm UPI below (y: 400 to 550)
+        AccessibilityNodeExtractor.ExtractedElement c2e1 = new AccessibilityNodeExtractor.ExtractedElement();
+        c2e1.text = "Paytm UPI";
+        c2e1.top = 400;
+        snapshot.elements.add(c2e1);
+
+        AccessibilityNodeExtractor.ExtractedElement c2e2 = new AccessibilityNodeExtractor.ExtractedElement();
+        c2e2.text = "₹125 assured cashback on min transaction value of ₹199";
+        c2e2.top = 470;
+        snapshot.elements.add(c2e2);
+
+        List<OfferEntity> offers = ScreenContentParser.extractOffers(snapshot, "VI");
+        assertNotNull(offers);
+        assertEquals(2, offers.size());
+
+        OfferEntity bhimOffer = offers.get(0).provider.contains("BHIM") ? offers.get(0) : offers.get(1);
+        OfferEntity paytmOffer = offers.get(0).provider.contains("Paytm") ? offers.get(0) : offers.get(1);
+
+        assertEquals("BHIM", bhimOffer.provider);
+        assertEquals(30.0, bhimOffer.cashbackAmount, 0.01);
+        assertEquals(99.0, bhimOffer.minTransactionAmount, 0.01);
+
+        assertEquals("Paytm", paytmOffer.provider);
+        assertEquals(125.0, paytmOffer.cashbackAmount, 0.01);
+        assertEquals(199.0, paytmOffer.minTransactionAmount, 0.01);
+    }
+
+    @Test
+    public void testOfferEntityEqualityAndDeduplication() {
+        OfferEntity o1 = new OfferEntity(
+                "off_1", "Paytm ₹125", "Paytm", "PAYMENT_OFFER", "Desc", "FLAT_CASHBACK",
+                0.0, 125.0, 199.0, 125.0, "ALL", "Paytm UPI", "VI", true, "2026-11-30",
+                "Terms", "EXTRACTED", "NONE", true
+        );
+        OfferEntity o2 = new OfferEntity(
+                "off_1", "Paytm Duplicate", "Paytm", "PAYMENT_OFFER", "Desc", "FLAT_CASHBACK",
+                0.0, 125.0, 199.0, 125.0, "ALL", "Paytm UPI", "VI", true, "2026-11-30",
+                "Terms", "EXTRACTED", "NONE", true
+        );
+        assertEquals(o1, o2);
+        assertEquals(o1.hashCode(), o2.hashCode());
+    }
+
+    @Test
     public void testSimDetectionStates() {
         SimProfileEntity sim1 = new SimProfileEntity(
                 "sim_1", "9847837607", "VI", "Vodafone Idea (Vi)", "KL", "Kerala", "SIM 1", true, true

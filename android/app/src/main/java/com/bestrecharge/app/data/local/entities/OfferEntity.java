@@ -55,4 +55,17 @@ public class OfferEntity {
         this.userTag = userTag;
         this.isActive = isActive;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        OfferEntity that = (OfferEntity) o;
+        return id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
 }

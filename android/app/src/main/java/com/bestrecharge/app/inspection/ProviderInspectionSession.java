@@ -38,6 +38,14 @@ public class ProviderInspectionSession implements Serializable {
     public int progressPercent = 0;
     public String failureReason = null;
 
+    // Checkout Automation Mode
+    public boolean isCheckoutMode = false;
+    public String targetMobile = null;
+    public double targetAmount = 0.0;
+    public String recommendedPayment = null;
+    public String couponCode = null;
+    public boolean checkoutPageReached = false;
+
     public final List<String> visitedScreens = new ArrayList<>();
     public final List<OfferEntity> extractedOffers = new ArrayList<>();
     public final List<RechargePlanEntity> extractedPlans = new ArrayList<>();

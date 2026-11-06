@@ -125,6 +125,44 @@ public class ProviderInspectionManager {
         return currentSession;
     }
 
+    public synchronized ProviderInspectionSession startCheckoutAutomation(
+            String providerCode,
+            String mobileNumber,
+            double amount,
+            String recommendedPayment,
+            String couponCode
+    ) {
+        String op = providerCode != null ? providerCode.toUpperCase() : "VI";
+        String targetPkg = TelecomRedirectionHelper.getPackageForOperator(op);
+
+        currentSession = new ProviderInspectionSession(op, targetPkg);
+        currentSession.isCheckoutMode = true;
+        currentSession.targetMobile = mobileNumber;
+        currentSession.targetAmount = amount;
+        currentSession.recommendedPayment = recommendedPayment;
+        currentSession.couponCode = couponCode;
+
+        currentWorkflow = workflowRegistry.get(op);
+        if (currentWorkflow != null) {
+            currentWorkflow.reset();
+            currentProcessor = new AccessibilityEventProcessor(currentWorkflow);
+        }
+
+        InspectionStateManager.getInstance().updateStage(
+                currentSession,
+                ProviderInspectionSession.Status.CONNECTING,
+                "Opening " + TelecomRedirectionHelper.getOperatorDisplayName(op) + " checkout for ₹" + (int) amount + "...",
+                10
+        );
+
+        // Open checkout via redirection helper
+        TelecomRedirectionHelper.redirectToRechargeCheckout(
+                context, op, mobileNumber, amount,
+                "Recharge ₹" + (int) amount + " via " + recommendedPayment
+        );
+        return currentSession;
+    }
+
     public synchronized void stopCurrentInspection(String reason) {
         if (currentSession != null && currentSession.isActive()) {
             InspectionStateManager.getInstance().markCancelled(currentSession);

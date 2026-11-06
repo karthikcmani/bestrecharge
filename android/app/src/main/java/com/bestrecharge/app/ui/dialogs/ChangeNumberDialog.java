@@ -125,14 +125,16 @@ public class ChangeNumberDialog extends Dialog {
             String circle = (String) binding.spinnerDialogCircle.getSelectedItem();
             if (circle == null) circle = "Delhi NCR";
 
+            String targetSimId = (currentSim != null && currentSim.id != null) ? currentSim.id : "sim_1";
+
             SimProfileEntity updatedSim = new SimProfileEntity(
-                    "sim_active_custom",
+                    targetSimId,
                     number,
                     opCode,
                     opName,
                     "DL",
                     circle,
-                    "ACTIVE RECHARGE",
+                    "SIM 1",
                     true,
                     true,
                     currentSim != null ? currentSim.subscriptionId : -1,
