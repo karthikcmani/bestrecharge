@@ -75,7 +75,7 @@ public class HomeViewModel extends AndroidViewModel {
         RecommendationEngine.RecommendationResult result = RecommendationEngine.evaluateAndRank(
                 cachedPlans, cachedOffers, userPrefs, currentPref
         );
-        recommendationResultLiveData.setValue(result);
+        recommendationResultLiveData.postValue(result);
     }
 
     public LiveData<RecommendationEngine.RecommendationResult> getRecommendationResult() {

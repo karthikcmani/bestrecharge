@@ -163,8 +163,10 @@ public class HomeFragment extends Fragment {
             numberDisplay = "Number Unavailable (Tap Change)";
         }
         binding.tvMobileNumber.setText(numberDisplay);
+        String opName = sim.operatorName != null ? sim.operatorName : "Vodafone Idea (Vi)";
+        String circleName = sim.circleName != null ? sim.circleName : "Delhi NCR";
         String sourceTag = sim.isUserConfirmed ? " • Confirmed" : (sim.isManuallyEntered ? " • Manual" : " • Hardware SIM");
-        binding.tvOperatorCircle.setText(sim.operatorName + " • " + sim.circleName + (sim.isPrepaid ? " (Prepaid)" : " (Postpaid)") + sourceTag);
+        binding.tvOperatorCircle.setText(opName + " • " + circleName + (sim.isPrepaid ? " (Prepaid)" : " (Postpaid)") + sourceTag);
 
         updateProviderHandsetStatus();
         viewModel.setOperator(sim.operatorCode);
@@ -307,11 +309,12 @@ public class HomeFragment extends Fragment {
 
         RechargePlanEntity plan = deal.rechargePlan;
         currentPlanId = plan.id;
+        String opName = plan.operatorName != null ? plan.operatorName : "Vi";
 
-        binding.tvTopDealHeading.setText("TOP RECOMMENDED DEAL FOR " + plan.operatorName.toUpperCase());
+        binding.tvTopDealHeading.setText("TOP RECOMMENDED DEAL FOR " + opName.toUpperCase());
         binding.tvDealBadgeLabel.setText(deal.actionLabel != null ? deal.actionLabel : "BEST DEAL");
         binding.tvDealSaveAmount.setText("Save ₹" + (int) (deal.originalMrp - deal.potentialEffectiveCost));
-        binding.tvDealPlanTitle.setText(plan.operatorName + " " + (plan.planCategory != null ? plan.planCategory.replace("_", " ") : "") + " ₹" + (int) plan.price);
+        binding.tvDealPlanTitle.setText(opName + " " + (plan.planCategory != null ? plan.planCategory.replace("_", " ") : "") + " ₹" + (int) plan.price);
 
         String benefits = plan.validityDays + " Days • " +
                 (plan.dailyDataGb > 0 ? plan.dailyDataGb + "GB/day" : plan.totalDataGb + "GB Total") +

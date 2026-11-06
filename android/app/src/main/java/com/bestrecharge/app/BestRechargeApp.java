@@ -25,26 +25,28 @@ public class BestRechargeApp extends Application {
 
     private void initDefaultLocalData() {
         Executors.newSingleThreadExecutor().execute(() -> {
-            AppDatabase db = AppDatabase.getInstance(this);
-            if (db.simProfileDao().getAllSimProfiles().isEmpty()) {
-                // 1. Seed Primary SIM (SIM 1)
-                SimProfileEntity sim1 = new SimProfileEntity(
-                        "sim_default_1",
-                        "9847837607",
-                        "VI",
-                        "Vodafone Idea (Vi)",
-                        "DL",
-                        "Delhi NCR",
-                        "SIM 1",
-                        true,
-                        true
-                );
-                List<SimProfileEntity> sims = new ArrayList<>();
-                sims.add(sim1);
-                db.simProfileDao().insertAll(sims);
+            try {
+                AppDatabase db = AppDatabase.getInstance(this);
+                if (db.simProfileDao().getAllSimProfiles().isEmpty()) {
+                    // 1. Seed Primary SIM (SIM 1)
+                    SimProfileEntity sim1 = new SimProfileEntity(
+                            "sim_default_1",
+                            "9847837607",
+                            "VI",
+                            "Vodafone Idea (Vi)",
+                            "KL",
+                            "Kerala",
+                            "SIM 1",
+                            true,
+                            true
+                    );
+                    List<SimProfileEntity> sims = new ArrayList<>();
+                    sims.add(sim1);
+                    db.simProfileDao().insertAll(sims);
+                }
 
-            // 2. Seed Plans if not fully populated
-            if (db.rechargePlanDao().getAllPlans().size() < 20) {
+                // 2. Seed Plans if not fully populated
+                if (db.rechargePlanDao().getAllPlans().size() < 20) {
                 List<RechargePlanEntity> plans = new ArrayList<>();
                 // Vi Plans
                 plans.add(new RechargePlanEntity(
@@ -289,6 +291,8 @@ public class BestRechargeApp extends Application {
                         "2026-09-07 11:15", "Received ₹45 cashback via BHIM."
                 ));
                 db.savingsRecordDao().insertAll(records);
+            } catch (Throwable t) {
+                android.util.Log.e("BestRechargeApp", "Database initialization error: " + t.getMessage(), t);
             }
         });
     }
