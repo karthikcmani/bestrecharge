@@ -134,6 +134,14 @@ public class ChangeNumberDialog extends Dialog {
                     circle,
                     "ACTIVE RECHARGE",
                     true,
+                    true,
+                    currentSim != null ? currentSim.subscriptionId : -1,
+                    opName,
+                    currentSim != null ? currentSim.mccMnc : "",
+                    "in",
+                    "READY",
+                    SimProfileEntity.STATE_USER_CONFIRMED,
+                    true,
                     true
             );
 

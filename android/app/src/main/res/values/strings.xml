@@ -15,4 +15,10 @@
     <string name="import_screenshot">Import Screenshot</string>
     <string name="find_best_deal">Find Best Deal</string>
     <string name="side_by_side_compare">Side-by-Side Compare</string>
+
+    <!-- Guided Inspection & Accessibility (F-Droid Open Source Compliant) -->
+    <string name="accessibility_service_description">Enables user-initiated, guided inspection of installed telecom provider applications (Vi, Jio, Airtel, BSNL) to discover accessible recharge tariffs, discount coupons, and terms &amp; conditions. Operates strictly inside authorized provider applications during active inspection sessions with zero surveillance of unrelated apps.</string>
+    <string name="provider_intelligence">Provider Intelligence</string>
+    <string name="inspect_provider_offers">Inspect Provider Offers</string>
+    <string name="scan_provider_offers">Scan Provider Offers</string>
 </resources>

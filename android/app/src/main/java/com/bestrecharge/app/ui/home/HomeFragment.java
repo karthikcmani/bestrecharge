@@ -110,6 +110,7 @@ public class HomeFragment extends Fragment {
         });
 
         binding.btnProviderHandsetAction.setOnClickListener(v -> handleProviderHandsetAction());
+        binding.cardProviderAppStatus.setOnClickListener(v -> handleProviderHandsetAction());
 
         binding.chipGroupPreferences.setOnCheckedStateChangeListener((group, checkedIds) -> {
             handleMultiPreferencesChanged(checkedIds);
@@ -159,10 +160,11 @@ public class HomeFragment extends Fragment {
         } else if (!rawNum.isEmpty()) {
             numberDisplay = "+91 " + rawNum;
         } else {
-            numberDisplay = "No Number Set (Tap Change)";
+            numberDisplay = "Number Unavailable (Tap Change)";
         }
         binding.tvMobileNumber.setText(numberDisplay);
-        binding.tvOperatorCircle.setText(sim.operatorName + " • " + sim.circleName + (sim.isPrepaid ? " (Prepaid)" : " (Postpaid)"));
+        String sourceTag = sim.isUserConfirmed ? " • Confirmed" : (sim.isManuallyEntered ? " • Manual" : " • Hardware SIM");
+        binding.tvOperatorCircle.setText(sim.operatorName + " • " + sim.circleName + (sim.isPrepaid ? " (Prepaid)" : " (Postpaid)") + sourceTag);
 
         updateProviderHandsetStatus();
         viewModel.setOperator(sim.operatorCode);
@@ -175,9 +177,9 @@ public class HomeFragment extends Fragment {
         boolean installed = TelecomRedirectionHelper.isProviderAppInstalled(getContext(), op);
 
         if (installed) {
-            binding.tvProviderHandsetStatus.setText("● " + opName + " detected on handset • Verified tariff active");
+            binding.tvProviderHandsetStatus.setText("● " + opName + " detected on handset • Guided inspection ready");
             binding.tvProviderHandsetStatus.setTextColor(getResources().getColor(R.color.savings_green_dark, null));
-            binding.btnProviderHandsetAction.setText("Open " + opName);
+            binding.btnProviderHandsetAction.setText("Scan " + opName + " Offers");
         } else {
             binding.tvProviderHandsetStatus.setText("⚠️ " + opName + " not installed (Sourced data active)");
             binding.tvProviderHandsetStatus.setTextColor(getResources().getColor(R.color.on_surface_muted, null));
@@ -191,7 +193,8 @@ public class HomeFragment extends Fragment {
         boolean installed = TelecomRedirectionHelper.isProviderAppInstalled(getContext(), op);
 
         if (installed) {
-            openOfficialTelecomApp();
+            Intent intent = new Intent(getContext(), com.bestrecharge.app.ui.inspection.ProviderIntelligenceActivity.class);
+            startActivity(intent);
         } else {
             String pkg = TelecomRedirectionHelper.getPackageForOperator(op);
             TelecomRedirectionHelper.openPlayStore(getContext(), pkg);
@@ -359,9 +362,9 @@ public class HomeFragment extends Fragment {
                         bindSimDetails(primary);
 
                         if (primary.mobileNumber == null || primary.mobileNumber.isEmpty()) {
-                            Toast.makeText(getContext(), "Detected " + primary.operatorName + " (" + primary.simSlot + "). Tap 'Change' to set 10-digit number.", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), primary.operatorName + " (" + primary.simSlot + ") detected. Tap 'Change' to set mobile number.", Toast.LENGTH_SHORT).show();
                         } else {
-                            Toast.makeText(getContext(), "Auto-detected: " + primary.operatorName + " " + primary.mobileNumber, Toast.LENGTH_LONG).show();
+                            Toast.makeText(getContext(), "Hardware SIM: " + primary.operatorName + " (" + primary.simSlot + ")", Toast.LENGTH_SHORT).show();
                         }
                     } else {
                         Toast.makeText(getContext(), "No active SIM card detected in device slots.", Toast.LENGTH_SHORT).show();
