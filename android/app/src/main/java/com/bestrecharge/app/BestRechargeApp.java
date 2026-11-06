@@ -43,14 +43,46 @@ public class BestRechargeApp extends Application {
                 sims.add(sim1);
                 db.simProfileDao().insertAll(sims);
 
-                // 2. Seed Plans
+            // 2. Seed Plans if not fully populated
+            if (db.rechargePlanDao().getAllPlans().size() < 20) {
                 List<RechargePlanEntity> plans = new ArrayList<>();
                 // Vi Plans
+                plans.add(new RechargePlanEntity(
+                        "vi_99_validity", "VI", "Vodafone Idea (Vi)", "DL",
+                        99.0, 15, 0.0, 0.2, "₹99 Full Talktime, Calls @ 2.5p/sec", 0,
+                        "", "VALIDITY_ONLY", "Lowest cost SIM validity retention pack with ₹99 talktime.",
+                        "Official Vi Prepaid Tariff", "2026-11-06", true
+                ));
+                plans.add(new RechargePlanEntity(
+                        "vi_179_validity", "VI", "Vodafone Idea (Vi)", "DL",
+                        179.0, 28, 0.0, 2.0, "Truly Unlimited Calls", 300,
+                        "", "VALIDITY_ONLY", "Most affordable 28 days unlimited calling validity pack.",
+                        "Official Vi Prepaid Tariff", "2026-11-06", true
+                ));
+                plans.add(new RechargePlanEntity(
+                        "vi_199_data", "VI", "Vodafone Idea (Vi)", "DL",
+                        199.0, 18, 1.0, 18.0, "Truly Unlimited Calls", 100,
+                        "", "DAILY_DATA", "Affordable 1GB/day daily data with unlimited calling.",
+                        "Official Vi Prepaid Tariff", "2026-11-06", true
+                ));
+                plans.add(new RechargePlanEntity(
+                        "vi_279_validity", "VI", "Vodafone Idea (Vi)", "DL",
+                        279.0, 90, 0.0, 1.0, "Incoming valid 90 days, ₹279 Talktime", 0,
+                        "", "VALIDITY_ONLY", "90 Days quarterly SIM keeping validity pack.",
+                        "Official Vi Prepaid Tariff", "2026-11-06", true
+                ));
                 plans.add(new RechargePlanEntity(
                         "vi_349_hero", "VI", "Vodafone Idea (Vi)", "DL",
                         349.0, 28, 1.5, 42.0, "Truly Unlimited Calls", 100,
                         "Vi Movies & TV, Weekend Rollover, Binge All Night (12am-6am)",
                         "UNLIMITED", "Hero Unlimited: Unlimited Night Data 12am-6am, Weekend Rollover, 1.5GB/day for 28 days.",
+                        "Official Vi Prepaid Tariff", "2026-11-06", true
+                ));
+                plans.add(new RechargePlanEntity(
+                        "vi_399_heavy", "VI", "Vodafone Idea (Vi)", "DL",
+                        399.0, 28, 2.5, 70.0, "Truly Unlimited Calls", 100,
+                        "Disney+ Hotstar 3 Months, Binge All Night",
+                        "DAILY_DATA", "Heavy Data: 2.5GB/day with OTT and Night Binge.",
                         "Official Vi Prepaid Tariff", "2026-11-06", true
                 ));
                 plans.add(new RechargePlanEntity(
@@ -68,18 +100,43 @@ public class BestRechargeApp extends Application {
                         "Official Vi Prepaid Tariff", "2026-11-06", true
                 ));
                 plans.add(new RechargePlanEntity(
-                        "vi_199_data", "VI", "Vodafone Idea (Vi)", "DL",
-                        199.0, 18, 1.0, 18.0, "Truly Unlimited Calls", 100,
-                        "", "POPULAR", "Affordable short validity unlimited calling and daily 1GB.",
+                        "vi_1999_annual", "VI", "Vodafone Idea (Vi)", "DL",
+                        1999.0, 365, 0.0, 24.0, "Truly Unlimited Calls", 3600,
+                        "", "VALIDITY_ONLY", "Full 365 Days annual service validity pack with unlimited calls and 24GB data.",
+                        "Official Vi Prepaid Tariff", "2026-11-06", true
+                ));
+                plans.add(new RechargePlanEntity(
+                        "vi_3199_annual", "VI", "Vodafone Idea (Vi)", "DL",
+                        3199.0, 365, 2.0, 730.0, "Truly Unlimited Calls", 100,
+                        "Amazon Prime Video Mobile 1 Year, Binge All Night",
+                        "ANNUAL", "365 Days 2GB/day flagship annual plan.",
                         "Official Vi Prepaid Tariff", "2026-11-06", true
                 ));
 
                 // Jio Plans
                 plans.add(new RechargePlanEntity(
+                        "jio_155_validity", "JIO", "Reliance Jio", "DL",
+                        155.0, 28, 0.0, 2.0, "Truly Unlimited Calls", 300,
+                        "JioCinema, JioTV", "VALIDITY_ONLY", "Lowest cost 28 days Jio validity pack.",
+                        "Official Jio Portal", "2026-11-06", true
+                ));
+                plans.add(new RechargePlanEntity(
+                        "jio_209_data", "JIO", "Reliance Jio", "DL",
+                        209.0, 22, 1.0, 22.0, "Truly Unlimited Calls", 100,
+                        "JioCinema, JioTV", "DAILY_DATA", "Affordable 1GB/day daily data pack.",
+                        "Official Jio Portal", "2026-11-06", true
+                ));
+                plans.add(new RechargePlanEntity(
                         "jio_349_popular", "JIO", "Reliance Jio", "DL",
                         349.0, 28, 2.0, 56.0, "Truly Unlimited Calls", 100,
                         "Unlimited True 5G, JioCinema, JioTV",
                         "UNLIMITED", "True 5G Unlimited, 2GB/day for 28 days with Jio apps.",
+                        "Official Jio Portal", "2026-11-06", true
+                ));
+                plans.add(new RechargePlanEntity(
+                        "jio_395_value", "JIO", "Reliance Jio", "DL",
+                        395.0, 84, 0.0, 6.0, "Truly Unlimited Calls", 1000,
+                        "JioCinema, JioTV", "VALIDITY_ONLY", "84 Days high validity value pack with unlimited calls.",
                         "Official Jio Portal", "2026-11-06", true
                 ));
                 plans.add(new RechargePlanEntity(
@@ -89,8 +146,26 @@ public class BestRechargeApp extends Application {
                         "LONG_VALIDITY", "90 Days uninterrupted 2GB/day + 20GB extra data.",
                         "Official Jio Portal", "2026-11-06", true
                 ));
+                plans.add(new RechargePlanEntity(
+                        "jio_1899_annual", "JIO", "Reliance Jio", "DL",
+                        1899.0, 336, 0.0, 24.0, "Truly Unlimited Calls", 3600,
+                        "JioCinema, JioTV", "VALIDITY_ONLY", "336 Days annual validity pack with unlimited calling.",
+                        "Official Jio Portal", "2026-11-06", true
+                ));
 
                 // Airtel Plans
+                plans.add(new RechargePlanEntity(
+                        "airtel_179_validity", "AIRTEL", "Bharti Airtel", "DL",
+                        179.0, 28, 0.0, 2.0, "Truly Unlimited Calls", 300,
+                        "Wynk Music, Apollo 24/7", "VALIDITY_ONLY", "Airtel 28 days validity saver pack.",
+                        "Official Airtel Tariff", "2026-11-06", true
+                ));
+                plans.add(new RechargePlanEntity(
+                        "airtel_299_standard", "AIRTEL", "Bharti Airtel", "DL",
+                        299.0, 28, 1.0, 28.0, "Truly Unlimited Calls", 100,
+                        "Wynk Music", "DAILY_DATA", "Standard 1GB/day daily plan.",
+                        "Official Airtel Tariff", "2026-11-06", true
+                ));
                 plans.add(new RechargePlanEntity(
                         "airtel_349_popular", "AIRTEL", "Bharti Airtel", "DL",
                         349.0, 28, 1.5, 42.0, "Truly Unlimited Calls", 100,
@@ -98,8 +173,26 @@ public class BestRechargeApp extends Application {
                         "UNLIMITED", "Unlimited 5G, 1.5GB/day 28 days with Wynk and Apollo 24/7.",
                         "Official Airtel Tariff", "2026-11-06", true
                 ));
+                plans.add(new RechargePlanEntity(
+                        "airtel_455_value", "AIRTEL", "Bharti Airtel", "DL",
+                        455.0, 84, 0.0, 6.0, "Truly Unlimited Calls", 900,
+                        "Wynk Music, Apollo 24/7", "VALIDITY_ONLY", "84 Days long validity saver with 6GB total data.",
+                        "Official Airtel Tariff", "2026-11-06", true
+                ));
+                plans.add(new RechargePlanEntity(
+                        "airtel_1799_annual", "AIRTEL", "Bharti Airtel", "DL",
+                        1799.0, 365, 0.0, 24.0, "Truly Unlimited Calls", 3600,
+                        "Wynk Music, Apollo 24/7", "VALIDITY_ONLY", "365 Days annual validity saver with unlimited calling.",
+                        "Official Airtel Tariff", "2026-11-06", true
+                ));
 
                 // BSNL Plans
+                plans.add(new RechargePlanEntity(
+                        "bsnl_107_validity", "BSNL", "BSNL", "DL",
+                        107.0, 35, 0.0, 3.0, "200 Mins Voice Calls", 0,
+                        "", "VALIDITY_ONLY", "35 Days low cost BSNL validity extension.",
+                        "Official BSNL Tariff", "2026-11-06", true
+                ));
                 plans.add(new RechargePlanEntity(
                         "bsnl_199_value", "BSNL", "BSNL", "DL",
                         199.0, 30, 2.0, 60.0, "Unlimited Local & STD Calls", 100,
@@ -112,7 +205,14 @@ public class BestRechargeApp extends Application {
                         "", "LONG_VALIDITY", "Long validity SIM keeping pack: 150 days validity with 2GB/day for first 30 days.",
                         "Official BSNL Tariff", "2026-11-06", true
                 ));
+                plans.add(new RechargePlanEntity(
+                        "bsnl_1999_annual", "BSNL", "BSNL", "DL",
+                        1999.0, 365, 0.0, 600.0, "Truly Unlimited Calls", 100,
+                        "", "ANNUAL", "365 Days annual 600GB high data pack.",
+                        "Official BSNL Tariff", "2026-11-06", true
+                ));
                 db.rechargePlanDao().insertAll(plans);
+            }
 
                 // 3. Seed Offers (matching uploaded screenshot terms!)
                 List<OfferEntity> offers = new ArrayList<>();

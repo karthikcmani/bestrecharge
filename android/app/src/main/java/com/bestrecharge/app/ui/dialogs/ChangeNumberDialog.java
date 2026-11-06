@@ -96,9 +96,15 @@ public class ChangeNumberDialog extends Dialog {
         binding.btnDialogCancel.setOnClickListener(v -> dismiss());
 
         binding.btnDialogApply.setOnClickListener(v -> {
-            String number = binding.etDialogMobileNumber.getText().toString().trim();
-            if (number.isEmpty()) {
-                Toast.makeText(getContext(), "Please enter a valid mobile number", Toast.LENGTH_SHORT).show();
+            String rawInput = binding.etDialogMobileNumber.getText() != null ?
+                    binding.etDialogMobileNumber.getText().toString().trim() : "";
+            String number = rawInput.replaceAll("[^0-9]", "");
+            if (number.length() > 10) {
+                number = number.substring(number.length() - 10);
+            }
+
+            if (number.length() != 10 || !number.matches("^[6-9]\\d{9}$")) {
+                Toast.makeText(getContext(), "Please enter a valid 10-digit mobile number (starts with 6-9)", Toast.LENGTH_LONG).show();
                 return;
             }
 

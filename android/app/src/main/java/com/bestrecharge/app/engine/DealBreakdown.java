@@ -1,9 +1,13 @@
 package com.bestrecharge.app.engine;
 
+import com.bestrecharge.app.data.local.entities.RechargePlanEntity;
+
 import java.io.Serializable;
 import java.util.List;
+import java.util.Locale;
 
 public class DealBreakdown implements Serializable {
+    public RechargePlanEntity rechargePlan;
     public double originalMrp;
     public double operatorDiscount;
     public double immediatePayable;
@@ -23,7 +27,12 @@ public class DealBreakdown implements Serializable {
     public String explanation;
     public String actionIntentUri;
     public String actionLabel;
+    public String whyRecommended;
     public int validityDays = 28;
+
+    public double originalCostPerDay;
+    public double payableCostPerDay;
+    public double effectiveCostPerDay;
 
     public DealBreakdown(double originalMrp, double operatorDiscount, double immediatePayable,
                          String recommendedPaymentProvider, double appliedPaymentDiscount,
@@ -54,25 +63,40 @@ public class DealBreakdown implements Serializable {
         this.actionIntentUri = actionIntentUri;
         this.actionLabel = actionLabel;
         this.validityDays = 28;
+        recalculateDailyCosts();
+    }
+
+    public void recalculateDailyCosts() {
+        int v = validityDays > 0 ? validityDays : 1;
+        this.originalCostPerDay = Math.round((originalMrp / v) * 100.0) / 100.0;
+        this.payableCostPerDay = Math.round((immediatePayable / v) * 100.0) / 100.0;
+        this.effectiveCostPerDay = Math.round((potentialEffectiveCost / v) * 100.0) / 100.0;
     }
 
     public double getDailyMrpCost() {
-        int v = validityDays > 0 ? validityDays : 28;
-        return Math.round((originalMrp / v) * 100.0) / 100.0;
+        return originalCostPerDay;
+    }
+
+    public double getDailyPayableCost() {
+        return payableCostPerDay;
     }
 
     public double getDailyEffectiveCost() {
-        int v = validityDays > 0 ? validityDays : 28;
-        return Math.round((potentialEffectiveCost / v) * 100.0) / 100.0;
+        return effectiveCostPerDay;
     }
 
     public double getDailySavings() {
-        int v = validityDays > 0 ? validityDays : 28;
-        return Math.round(((originalMrp - potentialEffectiveCost) / v) * 100.0) / 100.0;
+        return Math.round((originalCostPerDay - effectiveCostPerDay) * 100.0) / 100.0;
     }
 
+    /**
+     * Clear, transparent multi-tier daily financial metric as required by Section 11:
+     * Never equating 349 / 28 = 7.46, but explicitly separating MRP rate, Payable rate, and Effective rate.
+     */
     public String getDailyCostComparisonString() {
-        int v = validityDays > 0 ? validityDays : 28;
-        return "₹" + (int) originalMrp + " / " + v + " days = ₹" + String.format(java.util.Locale.US, "%.2f", getDailyEffectiveCost()) + "/day (Save ₹" + String.format(java.util.Locale.US, "%.2f", getDailySavings()) + "/day)";
+        int v = validityDays > 0 ? validityDays : 1;
+        return String.format(Locale.US,
+                "Original: ₹%.2f/d • Payable: ₹%.2f/d • Effective: ₹%.2f/d (Save ₹%.2f/d)",
+                originalCostPerDay, payableCostPerDay, effectiveCostPerDay, getDailySavings());
     }
 }

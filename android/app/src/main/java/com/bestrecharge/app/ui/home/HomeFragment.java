@@ -18,8 +18,12 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.bestrecharge.app.R;
+import com.bestrecharge.app.data.local.entities.RechargePlanEntity;
 import com.bestrecharge.app.data.local.entities.SimProfileEntity;
 import com.bestrecharge.app.databinding.FragmentHomeBinding;
+import com.bestrecharge.app.engine.DealBreakdown;
+import com.bestrecharge.app.engine.RechargePreference;
+import com.bestrecharge.app.engine.RecommendationEngine;
 import com.bestrecharge.app.telephony.SimDetectorManager;
 import com.bestrecharge.app.ui.deals.BestDealActivity;
 import com.bestrecharge.app.ui.dialogs.ChangeNumberDialog;
@@ -82,6 +86,12 @@ public class HomeFragment extends Fragment {
             if (sim != null) {
                 currentSim = sim;
                 bindSimDetails(sim);
+            }
+        });
+
+        viewModel.getRecommendationResult().observe(getViewLifecycleOwner(), result -> {
+            if (result != null && result.topDeal != null) {
+                bindTopDeal(result.topDeal);
             }
         });
 
@@ -154,7 +164,7 @@ public class HomeFragment extends Fragment {
         binding.tvOperatorCircle.setText(sim.operatorName + " • " + sim.circleName + (sim.isPrepaid ? " (Prepaid)" : " (Postpaid)"));
 
         updateProviderHandsetStatus();
-        updateTopDealForOperator(sim);
+        viewModel.setOperator(sim.operatorCode);
     }
 
     private void updateProviderHandsetStatus() {
@@ -164,11 +174,11 @@ public class HomeFragment extends Fragment {
         boolean installed = TelecomRedirectionHelper.isProviderAppInstalled(getContext(), op);
 
         if (installed) {
-            binding.tvProviderHandsetStatus.setText("● " + opName + " detected on handset • Ready for live sync");
+            binding.tvProviderHandsetStatus.setText("● " + opName + " detected on handset • Verified tariff active");
             binding.tvProviderHandsetStatus.setTextColor(getResources().getColor(R.color.savings_green_dark, null));
-            binding.btnProviderHandsetAction.setText("Sync Offers");
+            binding.btnProviderHandsetAction.setText("Open " + opName);
         } else {
-            binding.tvProviderHandsetStatus.setText("⚠️ " + opName + " not found on handset • Install for ₹15 off");
+            binding.tvProviderHandsetStatus.setText("⚠️ " + opName + " not installed (Sourced data active)");
             binding.tvProviderHandsetStatus.setTextColor(getResources().getColor(R.color.on_surface_muted, null));
             binding.btnProviderHandsetAction.setText("Install App");
         }
@@ -180,7 +190,7 @@ public class HomeFragment extends Fragment {
         boolean installed = TelecomRedirectionHelper.isProviderAppInstalled(getContext(), op);
 
         if (installed) {
-            triggerProcessingAnimation("Surfing live app-exclusive coupons and payment cashback for " + TelecomRedirectionHelper.getOperatorDisplayName(op) + "...");
+            openOfficialTelecomApp();
         } else {
             String pkg = TelecomRedirectionHelper.getPackageForOperator(op);
             TelecomRedirectionHelper.openPlayStore(getContext(), pkg);
@@ -189,20 +199,48 @@ public class HomeFragment extends Fragment {
 
     private void handlePreferenceChanged(int chipId) {
         if (currentSim == null) return;
-        String prefLabel = "all best deals";
-        if (chipId == R.id.chip_pref_under_300) {
-            prefLabel = "plans under ₹300";
+        String op = currentSim.operatorCode != null ? currentSim.operatorCode : "VI";
+        RechargePreference pref;
+
+        if (chipId == R.id.chip_pref_validity) {
+            pref = new RechargePreference(
+                    RechargePreference.DataAllowance.VALIDITY_ONLY, 0, 0.0,
+                    RechargePreference.RankingPriority.MAXIMUM_VALIDITY, op
+            );
+            triggerProcessingAnimation("Filtering for maximum validity plans & calculating daily rates...");
+        } else if (chipId == R.id.chip_pref_under_300) {
+            pref = new RechargePreference(
+                    RechargePreference.DataAllowance.ANY, 0, 300.0,
+                    RechargePreference.RankingPriority.LOWEST_EFFECTIVE_COST, op
+            );
+            triggerProcessingAnimation("Filtering plans under ₹300 & calculating maximum savings...");
         } else if (chipId == R.id.chip_pref_1_5_gb) {
-            prefLabel = "1.5 GB/day plans";
+            pref = new RechargePreference(
+                    RechargePreference.DataAllowance.GB_1_5_DAY, 0, 0.0,
+                    RechargePreference.RankingPriority.BEST_OVERALL_VALUE, op
+            );
+            triggerProcessingAnimation("Filtering 1.5 GB/day plans & stacking verified offers...");
         } else if (chipId == R.id.chip_pref_1_gb) {
-            prefLabel = "1 GB/day plans";
-        } else if (chipId == R.id.chip_pref_validity) {
-            prefLabel = "service validity only";
+            pref = new RechargePreference(
+                    RechargePreference.DataAllowance.GB_1_DAY, 0, 0.0,
+                    RechargePreference.RankingPriority.BEST_OVERALL_VALUE, op
+            );
+            triggerProcessingAnimation("Filtering 1 GB/day plans & calculating effective cost...");
         } else if (chipId == R.id.chip_pref_long_term) {
-            prefLabel = "84+ days long term plans";
+            pref = new RechargePreference(
+                    RechargePreference.DataAllowance.ANY, 84, 0.0,
+                    RechargePreference.RankingPriority.MAXIMUM_VALIDITY, op
+            );
+            triggerProcessingAnimation("Filtering 84+ days long term plans & analyzing value...");
+        } else {
+            pref = new RechargePreference(
+                    RechargePreference.DataAllowance.ANY, 0, 0.0,
+                    RechargePreference.RankingPriority.BEST_OVERALL_VALUE, op
+            );
+            triggerProcessingAnimation("Evaluating all plans across data, validity & cashback...");
         }
 
-        triggerProcessingAnimation("Autonomously comparing " + prefLabel + " with app discounts & UPI cashback...");
+        viewModel.setRechargePreference(pref);
     }
 
     private void triggerProcessingAnimation(String statusText) {
@@ -212,64 +250,36 @@ public class HomeFragment extends Fragment {
         binding.cardProcessingState.postDelayed(() -> {
             if (binding != null) {
                 binding.cardProcessingState.setVisibility(View.GONE);
-                updateTopDealForOperator(currentSim);
-                if (getContext() != null) {
-                    Toast.makeText(getContext(), "Smart deal recalculated!", Toast.LENGTH_SHORT).show();
-                }
             }
-        }, 800);
+        }, 600);
     }
 
-    private void updateTopDealForOperator(SimProfileEntity sim) {
-        String op = sim.operatorCode != null ? sim.operatorCode.toUpperCase() : "VI";
-        binding.tvTopDealHeading.setText("TOP RECOMMENDED DEAL FOR " + op);
+    private void bindTopDeal(DealBreakdown deal) {
+        if (deal == null || deal.rechargePlan == null) return;
+        binding.cardProcessingState.setVisibility(View.GONE);
 
-        if ("JIO".equals(op)) {
-            currentPlanId = "jio_349_popular";
-            binding.tvDealBadgeLabel.setText("TRUE 5G UNLIMITED");
-            binding.tvDealSaveAmount.setText("Save ₹100");
-            binding.tvDealPlanTitle.setText("Jio True 5G ₹349");
-            binding.tvDealBenefits.setText("28 Days • 2GB/day • Truly Unlimited Calls • JioCinema & JioTV");
-            binding.tvMrpPrice.setText("₹349");
-            binding.tvPayablePrice.setText("₹349");
-            binding.tvEffectivePrice.setText("₹249");
-            binding.tvDealStackExplanation.setText("Jio True 5G Pack + Paytm Assured ₹100 Cashback via UPI");
-            binding.tvDealDailyCost.setText("₹349 / 28 days = ₹8.89/day (Save ₹3.57/day)");
-        } else if ("AIRTEL".equals(op)) {
-            currentPlanId = "airtel_349_popular";
-            binding.tvDealBadgeLabel.setText("AIRTEL 5G PLUS");
-            binding.tvDealSaveAmount.setText("Save ₹75");
-            binding.tvDealPlanTitle.setText("Airtel Unlimited ₹349");
-            binding.tvDealBenefits.setText("28 Days • 1.5GB/day • Truly Unlimited Calls • Airtel Xstream Play");
-            binding.tvMrpPrice.setText("₹349");
-            binding.tvPayablePrice.setText("₹349");
-            binding.tvEffectivePrice.setText("₹274");
-            binding.tvDealStackExplanation.setText("Airtel 5G Plus + BHIM Payments App up to ₹75 Cashback");
-            binding.tvDealDailyCost.setText("₹349 / 28 days = ₹9.79/day (Save ₹2.68/day)");
-        } else if ("BSNL".equals(op)) {
-            currentPlanId = "bsnl_199_value";
-            binding.tvDealBadgeLabel.setText("BEST VALUE 30 DAYS");
-            binding.tvDealSaveAmount.setText("Save ₹25");
-            binding.tvDealPlanTitle.setText("BSNL Value ₹199");
-            binding.tvDealBenefits.setText("30 Days • 2GB/day • Unlimited Local & STD Calls");
-            binding.tvMrpPrice.setText("₹199");
-            binding.tvPayablePrice.setText("₹199");
-            binding.tvEffectivePrice.setText("₹174");
-            binding.tvDealStackExplanation.setText("Affordable BSNL Tariff + PhonePe Flat ₹25 Cashback");
-            binding.tvDealDailyCost.setText("₹199 / 30 days = ₹5.80/day (Save ₹0.83/day)");
-        } else {
-            // Default Vi
-            currentPlanId = "vi_349_hero";
-            binding.tvDealBadgeLabel.setText("MAX SAVINGS STACK");
-            binding.tvDealSaveAmount.setText("Save ₹140");
-            binding.tvDealPlanTitle.setText("Vi Hero Unlimited ₹349");
-            binding.tvDealBenefits.setText("28 Days • 1.5GB/day • Unlimited Calls • Night Binge (12-6am)");
-            binding.tvMrpPrice.setText("₹349");
-            binding.tvPayablePrice.setText("₹334");
-            binding.tvEffectivePrice.setText("₹209");
-            binding.tvDealStackExplanation.setText("Vi App ₹15 Instant Discount + Paytm UPI ₹125 Assured Cashback");
-            binding.tvDealDailyCost.setText("₹349 / 28 days = ₹7.46/day (Save ₹5.00/day)");
+        RechargePlanEntity plan = deal.rechargePlan;
+        currentPlanId = plan.id;
+
+        binding.tvTopDealHeading.setText("TOP RECOMMENDED DEAL FOR " + plan.operatorName.toUpperCase());
+        binding.tvDealBadgeLabel.setText(deal.actionLabel != null ? deal.actionLabel : "BEST DEAL");
+        binding.tvDealSaveAmount.setText("Save ₹" + (int) (deal.originalMrp - deal.potentialEffectiveCost));
+        binding.tvDealPlanTitle.setText(plan.operatorName + " " + (plan.planCategory != null ? plan.planCategory.replace("_", " ") : "") + " ₹" + (int) plan.price);
+
+        String benefits = plan.validityDays + " Days • " +
+                (plan.dailyDataGb > 0 ? plan.dailyDataGb + "GB/day" : plan.totalDataGb + "GB Total") +
+                " • " + plan.voiceBenefit;
+        if (plan.ottBenefits != null && !plan.ottBenefits.isEmpty()) {
+            benefits += " • " + plan.ottBenefits;
         }
+        binding.tvDealBenefits.setText(benefits);
+
+        binding.tvMrpPrice.setText("₹" + (int) deal.originalMrp);
+        binding.tvPayablePrice.setText("₹" + (int) deal.immediatePayable);
+        binding.tvEffectivePrice.setText("₹" + (int) deal.potentialEffectiveCost);
+
+        binding.tvDealDailyCost.setText(deal.getDailyCostComparisonString());
+        binding.tvDealStackExplanation.setText(deal.explanation + (deal.whyRecommended != null ? " • " + deal.whyRecommended : ""));
     }
 
     private void checkAndDetectSim() {

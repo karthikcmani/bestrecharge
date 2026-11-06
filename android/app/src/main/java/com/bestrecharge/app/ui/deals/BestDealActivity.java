@@ -85,6 +85,7 @@ public class BestDealActivity extends AppCompatActivity {
 
     private void bindDeal(DealBreakdown deal, RechargePlanEntity plan) {
         deal.validityDays = plan.validityDays;
+        deal.recalculateDailyCosts();
         binding.tvDetailPlanHeader.setText(plan.operatorName + " – ₹" + (int) plan.price);
         binding.tvDetailPlanSpecs.setText(plan.validityDays + " Days • " +
                 (plan.dailyDataGb > 0 ? plan.dailyDataGb + "GB/day" : plan.totalDataGb + "GB Total") +
