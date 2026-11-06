@@ -11,6 +11,9 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.bestrecharge.app.data.local.entities.OfferEntity;
 import com.bestrecharge.app.data.repository.RechargeRepository;
@@ -31,6 +34,12 @@ public class ScreenshotImportActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityScreenshotImportBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(insets.left, insets.top, insets.right, 0);
+            return windowInsets;
+        });
 
         binding.btnOcrBack.setOnClickListener(v -> finish());
 

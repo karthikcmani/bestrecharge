@@ -74,50 +74,57 @@ public class TelecomRedirectionHelper {
         boolean isAppInstalled = isPackageInstalled(context, targetPackage);
         Log.d(TAG, "Redirecting for " + op + " (" + targetPackage + "), installed: " + isAppInstalled);
 
-        // 1. Attempt targeted App Link / Deep Link directly to checkout page
+        // 1. If provider app is installed, attempt targeted App Links and deep link schemes
         if (isAppInstalled) {
-            // Try standard HTTP App Link with package targeting
+            // Attempt 1: Targeted HTTP App Link directly into provider checkout
             try {
                 Intent deepLinkIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(webCheckoutUrl));
                 deepLinkIntent.setPackage(targetPackage);
                 deepLinkIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 populateExtras(deepLinkIntent, mobile, amtInt);
-
-                if (canResolveIntent(context, deepLinkIntent)) {
-                    context.startActivity(deepLinkIntent);
-                    showToast(context, "Opening " + getOperatorDisplayName(op) + " checkout for ₹" + amtInt);
-                    return true;
-                }
+                context.startActivity(deepLinkIntent);
+                showToast(context, "Opening " + getOperatorDisplayName(op) + " checkout for ₹" + amtInt);
+                return true;
             } catch (Exception e) {
-                Log.w(TAG, "Failed launching App Link with package: " + e.getMessage());
+                Log.d(TAG, "App link with package failed: " + e.getMessage());
             }
 
-            // Try custom scheme if App Link did not resolve
+            // Attempt 2: Targeted custom URI scheme
             if (customSchemeUri != null) {
                 try {
                     Intent schemeIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(customSchemeUri));
                     schemeIntent.setPackage(targetPackage);
                     schemeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     populateExtras(schemeIntent, mobile, amtInt);
-
-                    if (canResolveIntent(context, schemeIntent)) {
-                        context.startActivity(schemeIntent);
-                        showToast(context, "Opening " + getOperatorDisplayName(op) + " checkout for ₹" + amtInt);
-                        return true;
-                    }
+                    context.startActivity(schemeIntent);
+                    showToast(context, "Opening " + getOperatorDisplayName(op) + " checkout for ₹" + amtInt);
+                    return true;
                 } catch (Exception e) {
-                    Log.w(TAG, "Failed launching custom scheme: " + e.getMessage());
+                    Log.d(TAG, "Custom scheme with package failed: " + e.getMessage());
                 }
             }
 
-            // Fallback: Launch the installed app's main launcher with intent extras preloaded
+            // Attempt 3: General view intent for operator App Link
+            try {
+                Intent genericDeepLink = new Intent(Intent.ACTION_VIEW, Uri.parse(webCheckoutUrl));
+                genericDeepLink.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                populateExtras(genericDeepLink, mobile, amtInt);
+                context.startActivity(genericDeepLink);
+                showToast(context, "Opening " + getOperatorDisplayName(op) + " checkout for ₹" + amtInt);
+                return true;
+            } catch (Exception e) {
+                Log.d(TAG, "Generic deep link failed: " + e.getMessage());
+            }
+
+            // Attempt 4: Launch root intent with pre-filled recharge extras & data
             try {
                 Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(targetPackage);
                 if (launchIntent != null) {
                     launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    launchIntent.setData(Uri.parse(webCheckoutUrl));
                     populateExtras(launchIntent, mobile, amtInt);
                     context.startActivity(launchIntent);
-                    showToast(context, "Opening " + getOperatorDisplayName(op) + " for number " + mobile);
+                    showToast(context, "Opening " + getOperatorDisplayName(op) + " for ₹" + amtInt);
                     return true;
                 }
             } catch (Exception e) {

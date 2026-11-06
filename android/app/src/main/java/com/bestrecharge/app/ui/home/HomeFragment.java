@@ -31,6 +31,7 @@ import com.bestrecharge.app.ui.main.MainActivity;
 import com.bestrecharge.app.ui.ocr.ScreenshotImportActivity;
 import com.bestrecharge.app.utils.TelecomRedirectionHelper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class HomeFragment extends Fragment {
@@ -40,6 +41,7 @@ public class HomeFragment extends Fragment {
     private List<SimProfileEntity> allSims;
     private SimProfileEntity currentSim;
     private String currentPlanId = "vi_349_hero";
+    private DealBreakdown currentTopDeal;
 
     private ActivityResultLauncher<String[]> telephonyPermissionLauncher;
 
@@ -110,8 +112,7 @@ public class HomeFragment extends Fragment {
         binding.btnProviderHandsetAction.setOnClickListener(v -> handleProviderHandsetAction());
 
         binding.chipGroupPreferences.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            if (checkedIds.isEmpty()) return;
-            handlePreferenceChanged(checkedIds.get(0));
+            handleMultiPreferencesChanged(checkedIds);
         });
 
         binding.btnInspectDeal.setOnClickListener(v -> {
@@ -197,49 +198,91 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void handlePreferenceChanged(int chipId) {
+    private void handleMultiPreferencesChanged(List<Integer> checkedIds) {
         if (currentSim == null) return;
         String op = currentSim.operatorCode != null ? currentSim.operatorCode : "VI";
-        RechargePreference pref;
 
-        if (chipId == R.id.chip_pref_validity) {
-            pref = new RechargePreference(
-                    RechargePreference.DataAllowance.VALIDITY_ONLY, 0, 0.0,
-                    RechargePreference.RankingPriority.MAXIMUM_VALIDITY, op
-            );
-            triggerProcessingAnimation("Filtering for maximum validity plans & calculating daily rates...");
-        } else if (chipId == R.id.chip_pref_under_300) {
-            pref = new RechargePreference(
-                    RechargePreference.DataAllowance.ANY, 0, 300.0,
-                    RechargePreference.RankingPriority.LOWEST_EFFECTIVE_COST, op
-            );
-            triggerProcessingAnimation("Filtering plans under ₹300 & calculating maximum savings...");
-        } else if (chipId == R.id.chip_pref_1_5_gb) {
-            pref = new RechargePreference(
-                    RechargePreference.DataAllowance.GB_1_5_DAY, 0, 0.0,
-                    RechargePreference.RankingPriority.BEST_OVERALL_VALUE, op
-            );
-            triggerProcessingAnimation("Filtering 1.5 GB/day plans & stacking verified offers...");
-        } else if (chipId == R.id.chip_pref_1_gb) {
-            pref = new RechargePreference(
-                    RechargePreference.DataAllowance.GB_1_DAY, 0, 0.0,
-                    RechargePreference.RankingPriority.BEST_OVERALL_VALUE, op
-            );
-            triggerProcessingAnimation("Filtering 1 GB/day plans & calculating effective cost...");
-        } else if (chipId == R.id.chip_pref_long_term) {
-            pref = new RechargePreference(
-                    RechargePreference.DataAllowance.ANY, 84, 0.0,
-                    RechargePreference.RankingPriority.MAXIMUM_VALIDITY, op
-            );
-            triggerProcessingAnimation("Filtering 84+ days long term plans & analyzing value...");
-        } else {
-            pref = new RechargePreference(
-                    RechargePreference.DataAllowance.ANY, 0, 0.0,
-                    RechargePreference.RankingPriority.BEST_OVERALL_VALUE, op
-            );
+        RechargePreference pref = new RechargePreference();
+        pref.operatorCode = op;
+        pref.circleCode = currentSim.circleCode != null ? currentSim.circleCode : "DL";
+
+        if (checkedIds == null || checkedIds.isEmpty()) {
+            pref.dataAllowance = RechargePreference.DataAllowance.ANY;
+            pref.priority = RechargePreference.RankingPriority.BEST_OVERALL_VALUE;
             triggerProcessingAnimation("Evaluating all plans across data, validity & cashback...");
+            viewModel.setRechargePreference(pref);
+            return;
         }
 
+        List<Integer> activeIds = new ArrayList<>(checkedIds);
+        // If specific chips are selected, make sure "All Best Deals" chip is unchecked if user tapped another
+        if (activeIds.contains(R.id.chip_pref_all) && activeIds.size() > 1) {
+            binding.chipPrefAll.setChecked(false);
+            activeIds.remove(Integer.valueOf(R.id.chip_pref_all));
+        }
+
+        List<String> activeFilterNames = new ArrayList<>();
+
+        // Budget filters
+        if (activeIds.contains(R.id.chip_pref_under_200)) {
+            pref.maxBudget = 200.0;
+            activeFilterNames.add("< ₹200");
+        } else if (activeIds.contains(R.id.chip_pref_under_300)) {
+            pref.maxBudget = 300.0;
+            activeFilterNames.add("< ₹300");
+        } else if (activeIds.contains(R.id.chip_pref_under_500)) {
+            pref.maxBudget = 500.0;
+            activeFilterNames.add("< ₹500");
+        }
+
+        // Data / Validity criteria
+        if (activeIds.contains(R.id.chip_pref_validity)) {
+            pref.dataAllowance = RechargePreference.DataAllowance.VALIDITY_ONLY;
+            pref.priority = RechargePreference.RankingPriority.MAXIMUM_VALIDITY;
+            activeFilterNames.add("Validity Only");
+        } else if (activeIds.contains(R.id.chip_pref_2_gb)) {
+            pref.dataAllowance = RechargePreference.DataAllowance.GB_2_DAY;
+            activeFilterNames.add("2 GB/day");
+        } else if (activeIds.contains(R.id.chip_pref_1_5_gb)) {
+            pref.dataAllowance = RechargePreference.DataAllowance.GB_1_5_DAY;
+            activeFilterNames.add("1.5 GB/day");
+        } else if (activeIds.contains(R.id.chip_pref_1_gb)) {
+            pref.dataAllowance = RechargePreference.DataAllowance.GB_1_DAY;
+            activeFilterNames.add("1 GB/day");
+        }
+
+        // Minimum Validity
+        if (activeIds.contains(R.id.chip_pref_annual)) {
+            pref.minValidityDays = 365;
+            activeFilterNames.add("365 Days");
+        } else if (activeIds.contains(R.id.chip_pref_long_term)) {
+            pref.minValidityDays = 84;
+            activeFilterNames.add("84+ Days");
+        }
+
+        // Unlimited Calls
+        if (activeIds.contains(R.id.chip_pref_unlimited_calls)) {
+            pref.unlimitedCallsRequired = true;
+            activeFilterNames.add("Unlimited Calls");
+        }
+
+        // OTT
+        if (activeIds.contains(R.id.chip_pref_ott)) {
+            pref.ottRequired = true;
+            activeFilterNames.add("OTT Included");
+        }
+
+        // Priorities
+        if (activeIds.contains(R.id.chip_pref_max_cashback)) {
+            pref.priority = RechargePreference.RankingPriority.MAXIMUM_CASHBACK;
+            activeFilterNames.add("Max Cashback");
+        } else if (activeIds.contains(R.id.chip_pref_lowest_cost)) {
+            pref.priority = RechargePreference.RankingPriority.LOWEST_EFFECTIVE_COST;
+            activeFilterNames.add("Lowest Cost");
+        }
+
+        String filterDesc = android.text.TextUtils.join(" • ", activeFilterNames);
+        triggerProcessingAnimation("Filtering for: " + (filterDesc.isEmpty() ? "best deals" : filterDesc) + "...");
         viewModel.setRechargePreference(pref);
     }
 
@@ -256,6 +299,7 @@ public class HomeFragment extends Fragment {
 
     private void bindTopDeal(DealBreakdown deal) {
         if (deal == null || deal.rechargePlan == null) return;
+        this.currentTopDeal = deal;
         binding.cardProcessingState.setVisibility(View.GONE);
 
         RechargePlanEntity plan = deal.rechargePlan;
@@ -347,12 +391,15 @@ public class HomeFragment extends Fragment {
         if (currentSim == null || getContext() == null) return;
         String op = currentSim.operatorCode != null ? currentSim.operatorCode.toUpperCase() : "VI";
         String mobile = currentSim.mobileNumber != null ? currentSim.mobileNumber : "9847837607";
+        double amount = (currentTopDeal != null && currentTopDeal.originalMrp > 0) ? currentTopDeal.originalMrp : 349.0;
+        String explanation = currentTopDeal != null ? currentTopDeal.explanation : ("Check verified " + op + " plans and app-exclusive offers");
+
         TelecomRedirectionHelper.redirectToRechargeCheckout(
                 requireContext(),
                 op,
                 mobile,
-                349.0,
-                "Check verified " + op + " plans and app-exclusive offers"
+                amount,
+                explanation
         );
     }
 

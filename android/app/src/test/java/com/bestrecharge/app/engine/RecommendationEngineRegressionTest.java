@@ -343,4 +343,81 @@ public class RecommendationEngineRegressionTest {
         assertTrue(result.topDeal.originalCostPerDay >= 0);
         assertTrue(result.topDeal.effectiveCostPerDay >= 0);
     }
+
+    /**
+     * TEST 13: DoT Indian National Numbering Plan Series Allocation
+     * Expected: 98478 37666 and 98478 37607 must strictly allocate to Vodafone Idea (Vi) Kerala.
+     */
+    @Test
+    public void test13_dotSeriesAllocation_keralaViNumberDetectedCorrectly() {
+        com.bestrecharge.app.utils.TelecomNumberSeriesHelper.AllocationInfo alloc1 =
+                com.bestrecharge.app.utils.TelecomNumberSeriesHelper.getAllocation("+91 98478 37666");
+        assertNotNull(alloc1);
+        assertEquals("VI", alloc1.operatorCode);
+        assertEquals("Vodafone Idea (Vi)", alloc1.operatorName);
+        assertEquals("Kerala", alloc1.circleName);
+        assertEquals("KL", alloc1.circleCode);
+
+        com.bestrecharge.app.utils.TelecomNumberSeriesHelper.AllocationInfo alloc2 =
+                com.bestrecharge.app.utils.TelecomNumberSeriesHelper.getAllocation("9847837607");
+        assertNotNull(alloc2);
+        assertEquals("VI", alloc2.operatorCode);
+        assertEquals("Kerala", alloc2.circleName);
+
+        // Test Jio series (starts with 700 / 620)
+        com.bestrecharge.app.utils.TelecomNumberSeriesHelper.AllocationInfo allocJio =
+                com.bestrecharge.app.utils.TelecomNumberSeriesHelper.getAllocation("7001234567");
+        assertNotNull(allocJio);
+        assertEquals("JIO", allocJio.operatorCode);
+
+        // Test Airtel Delhi series (9810)
+        com.bestrecharge.app.utils.TelecomNumberSeriesHelper.AllocationInfo allocAirtel =
+                com.bestrecharge.app.utils.TelecomNumberSeriesHelper.getAllocation("9810123456");
+        assertNotNull(allocAirtel);
+        assertEquals("AIRTEL", allocAirtel.operatorCode);
+    }
+
+    /**
+     * TEST 14: Multi-Preference Filter Combination (Budget + Daily Data)
+     * Expected: User selecting < ₹350 AND 1.5 GB/day must only return Plan C (₹349 Hero 1.5GB/day).
+     */
+    @Test
+    public void test14_multiPreference_budgetAndDataCombined() {
+        RechargePreference multiPref = new RechargePreference();
+        multiPref.operatorCode = "VI";
+        multiPref.maxBudget = 350.0;
+        multiPref.dataAllowance = RechargePreference.DataAllowance.GB_1_5_DAY;
+
+        RecommendationEngine.RecommendationResult result = RecommendationEngine.evaluateAndRank(
+                samplePlans, sampleOffers, userPrefs, multiPref
+        );
+
+        assertNotNull(result);
+        assertNotNull(result.topDeal);
+        assertEquals("plan_349_hero", result.topDeal.rechargePlan.id);
+        assertEquals(349.0, result.topDeal.originalMrp, 0.01);
+    }
+
+    /**
+     * TEST 15: Multi-Preference Filter Combination (Validity Only + Budget < ₹200)
+     * Expected: User selecting Validity Only AND < ₹200 returns Plan B (₹179 Validity pack).
+     */
+    @Test
+    public void test15_multiPreference_validityOnlyAndUnder200() {
+        RechargePreference multiPref = new RechargePreference();
+        multiPref.operatorCode = "VI";
+        multiPref.maxBudget = 200.0;
+        multiPref.dataAllowance = RechargePreference.DataAllowance.VALIDITY_ONLY;
+        multiPref.priority = RechargePreference.RankingPriority.MAXIMUM_VALIDITY;
+
+        RecommendationEngine.RecommendationResult result = RecommendationEngine.evaluateAndRank(
+                samplePlans, sampleOffers, userPrefs, multiPref
+        );
+
+        assertNotNull(result);
+        assertNotNull(result.topDeal);
+        assertEquals("plan_179_val", result.topDeal.rechargePlan.id);
+        assertEquals(179.0, result.topDeal.originalMrp, 0.01);
+        assertEquals(28, result.topDeal.rechargePlan.validityDays);
+    }
 }

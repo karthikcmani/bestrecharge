@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.bestrecharge.app.data.local.AppDatabase;
 import com.bestrecharge.app.data.local.entities.OfferEntity;
@@ -38,6 +41,12 @@ public class BestDealActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityBestDealBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(insets.left, insets.top, insets.right, 0);
+            return windowInsets;
+        });
 
         binding.btnDealBack.setOnClickListener(v -> finish());
 

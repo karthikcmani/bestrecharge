@@ -61,15 +61,20 @@ public class ChangeNumberDialog extends Dialog {
                 String cleaned = currentSim.mobileNumber.replaceAll("[^0-9]", "");
                 binding.etDialogMobileNumber.setText(cleaned);
                 binding.etDialogMobileNumber.setSelection(cleaned.length());
-            }
-            if ("JIO".equalsIgnoreCase(currentSim.operatorCode)) {
-                binding.rbDialogJio.setChecked(true);
-            } else if ("AIRTEL".equalsIgnoreCase(currentSim.operatorCode)) {
-                binding.rbDialogAirtel.setChecked(true);
-            } else if ("BSNL".equalsIgnoreCase(currentSim.operatorCode)) {
-                binding.rbDialogBsnl.setChecked(true);
+
+                // Auto-detect allocated operator and circle
+                com.bestrecharge.app.utils.TelecomNumberSeriesHelper.AllocationInfo alloc =
+                        com.bestrecharge.app.utils.TelecomNumberSeriesHelper.getAllocation(cleaned);
+                if (alloc != null) {
+                    selectOperatorRadio(alloc.operatorCode);
+                    selectCircleInSpinner(alloc.circleName);
+                } else {
+                    selectOperatorRadio(currentSim.operatorCode);
+                    selectCircleInSpinner(currentSim.circleName);
+                }
             } else {
-                binding.rbDialogVi.setChecked(true);
+                selectOperatorRadio(currentSim.operatorCode);
+                selectCircleInSpinner(currentSim.circleName);
             }
         }
 
@@ -77,16 +82,11 @@ public class ChangeNumberDialog extends Dialog {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (s != null && s.length() >= 4) {
-                    String prefix = s.toString().substring(0, 4);
-                    // Quick suggestion based on common prefixes if user hasn't ported
-                    if (prefix.startsWith("9847") || prefix.startsWith("9846") || prefix.startsWith("9820")) {
-                        binding.rbDialogVi.setChecked(true);
-                    } else if (prefix.startsWith("9810") || prefix.startsWith("9811") || prefix.startsWith("9845")) {
-                        binding.rbDialogAirtel.setChecked(true);
-                    } else if (prefix.startsWith("700") || prefix.startsWith("799") || prefix.startsWith("890") || prefix.startsWith("630")) {
-                        binding.rbDialogJio.setChecked(true);
-                    } else if (prefix.startsWith("944") || prefix.startsWith("943")) {
-                        binding.rbDialogBsnl.setChecked(true);
+                    com.bestrecharge.app.utils.TelecomNumberSeriesHelper.AllocationInfo alloc =
+                            com.bestrecharge.app.utils.TelecomNumberSeriesHelper.getAllocation(s.toString());
+                    if (alloc != null) {
+                        selectOperatorRadio(alloc.operatorCode);
+                        selectCircleInSpinner(alloc.circleName);
                     }
                 }
             }
@@ -147,5 +147,27 @@ public class ChangeNumberDialog extends Dialog {
 
             dismiss();
         });
+    }
+
+    private void selectOperatorRadio(String opCode) {
+        if ("JIO".equalsIgnoreCase(opCode)) {
+            binding.rbDialogJio.setChecked(true);
+        } else if ("AIRTEL".equalsIgnoreCase(opCode)) {
+            binding.rbDialogAirtel.setChecked(true);
+        } else if ("BSNL".equalsIgnoreCase(opCode)) {
+            binding.rbDialogBsnl.setChecked(true);
+        } else {
+            binding.rbDialogVi.setChecked(true);
+        }
+    }
+
+    private void selectCircleInSpinner(String circleName) {
+        if (circleName == null) return;
+        for (int i = 0; i < CIRCLES.length; i++) {
+            if (CIRCLES[i].equalsIgnoreCase(circleName)) {
+                binding.spinnerDialogCircle.setSelection(i);
+                break;
+            }
+        }
     }
 }

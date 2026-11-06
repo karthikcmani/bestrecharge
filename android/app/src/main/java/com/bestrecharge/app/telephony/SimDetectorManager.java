@@ -121,14 +121,27 @@ public class SimDetectorManager {
                         }
                     }
 
+                    String circleName = "Delhi NCR";
+                    String circleCode = "DL";
+                    if (number != null && number.length() >= 4) {
+                        com.bestrecharge.app.utils.TelecomNumberSeriesHelper.AllocationInfo alloc =
+                                com.bestrecharge.app.utils.TelecomNumberSeriesHelper.getAllocation(number);
+                        if (alloc != null) {
+                            circleName = alloc.circleName;
+                            circleCode = alloc.circleCode;
+                            opCode = alloc.operatorCode;
+                            opName = alloc.operatorName;
+                        }
+                    }
+
                     boolean isPrimary = (i == 0);
                     SimProfileEntity simProfile = new SimProfileEntity(
                             "sim_device_" + (i + 1),
                             number,
                             opCode,
                             opName,
-                            "DL",
-                            "Delhi NCR",
+                            circleCode,
+                            circleName,
                             slotLabel,
                             true,
                             isPrimary
