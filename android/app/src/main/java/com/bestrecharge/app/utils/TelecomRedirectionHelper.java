@@ -150,6 +150,57 @@ public class TelecomRedirectionHelper {
         intent.putExtra("source", "BestRecharge");
     }
 
+    public static String getPackageForOperator(String opCode) {
+        String op = opCode != null ? opCode.trim().toUpperCase() : "VI";
+        if ("JIO".equals(op)) return PKG_JIO;
+        if ("AIRTEL".equals(op)) return PKG_AIRTEL;
+        if ("BSNL".equals(op)) return PKG_BSNL;
+        return PKG_VI;
+    }
+
+    public static boolean isProviderAppInstalled(Context context, String opCode) {
+        if (context == null) return false;
+        return isPackageInstalled(context, getPackageForOperator(opCode));
+    }
+
+    public static void openPlayStore(Context context, String packageName) {
+        if (context == null || packageName == null) return;
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + packageName));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        } catch (android.content.ActivityNotFoundException anfe) {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + packageName));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        }
+    }
+
+    /**
+     * Checks if provider app is installed. If not, prompts user with a dialog to download from Play Store,
+     * as requested in the workflow diagram.
+     */
+    public static void checkProviderAppWithPrompt(Context context, String opCode, Runnable onProceed) {
+        if (context == null) return;
+        String opName = getOperatorDisplayName(opCode);
+        String pkg = getPackageForOperator(opCode);
+
+        if (isProviderAppInstalled(context, opCode)) {
+            if (onProceed != null) onProceed.run();
+        } else {
+            new androidx.appcompat.app.AlertDialog.Builder(context)
+                    .setTitle(opName + " Not Installed")
+                    .setMessage(opName + " is required to unlock app-exclusive discounts (e.g. ₹15 instant off) and direct 1-tap checkout.\n\nWould you like to install " + opName + " from Google Play Store?")
+                    .setPositiveButton("Install " + opName, (dialog, which) -> {
+                        openPlayStore(context, pkg);
+                    })
+                    .setNegativeButton("Continue Anyway", (dialog, which) -> {
+                        if (onProceed != null) onProceed.run();
+                    })
+                    .show();
+        }
+    }
+
     private static boolean isPackageInstalled(Context context, String packageName) {
         try {
             context.getPackageManager().getPackageInfo(packageName, 0);

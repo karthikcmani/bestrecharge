@@ -97,7 +97,12 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        binding.btnOpenOfficialApp.setOnClickListener(v -> openOfficialTelecomApp());
+        binding.btnProviderHandsetAction.setOnClickListener(v -> handleProviderHandsetAction());
+
+        binding.chipGroupPreferences.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds.isEmpty()) return;
+            handlePreferenceChanged(checkedIds.get(0));
+        });
 
         binding.btnInspectDeal.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), BestDealActivity.class);
@@ -148,13 +153,76 @@ public class HomeFragment extends Fragment {
         binding.tvMobileNumber.setText(numberDisplay);
         binding.tvOperatorCircle.setText(sim.operatorName + " • " + sim.circleName + (sim.isPrepaid ? " (Prepaid)" : " (Postpaid)"));
 
+        updateProviderHandsetStatus();
         updateTopDealForOperator(sim);
+    }
+
+    private void updateProviderHandsetStatus() {
+        if (currentSim == null || getContext() == null) return;
+        String op = currentSim.operatorCode != null ? currentSim.operatorCode.toUpperCase() : "VI";
+        String opName = TelecomRedirectionHelper.getOperatorDisplayName(op);
+        boolean installed = TelecomRedirectionHelper.isProviderAppInstalled(getContext(), op);
+
+        if (installed) {
+            binding.tvProviderHandsetStatus.setText("● " + opName + " detected on handset • Ready for live sync");
+            binding.tvProviderHandsetStatus.setTextColor(getResources().getColor(R.color.savings_green_dark, null));
+            binding.btnProviderHandsetAction.setText("Sync Offers");
+        } else {
+            binding.tvProviderHandsetStatus.setText("⚠️ " + opName + " not found on handset • Install for ₹15 off");
+            binding.tvProviderHandsetStatus.setTextColor(getResources().getColor(R.color.on_surface_muted, null));
+            binding.btnProviderHandsetAction.setText("Install App");
+        }
+    }
+
+    private void handleProviderHandsetAction() {
+        if (currentSim == null || getContext() == null) return;
+        String op = currentSim.operatorCode != null ? currentSim.operatorCode.toUpperCase() : "VI";
+        boolean installed = TelecomRedirectionHelper.isProviderAppInstalled(getContext(), op);
+
+        if (installed) {
+            triggerProcessingAnimation("Surfing live app-exclusive coupons and payment cashback for " + TelecomRedirectionHelper.getOperatorDisplayName(op) + "...");
+        } else {
+            String pkg = TelecomRedirectionHelper.getPackageForOperator(op);
+            TelecomRedirectionHelper.openPlayStore(getContext(), pkg);
+        }
+    }
+
+    private void handlePreferenceChanged(int chipId) {
+        if (currentSim == null) return;
+        String prefLabel = "all best deals";
+        if (chipId == R.id.chip_pref_under_300) {
+            prefLabel = "plans under ₹300";
+        } else if (chipId == R.id.chip_pref_1_5_gb) {
+            prefLabel = "1.5 GB/day plans";
+        } else if (chipId == R.id.chip_pref_1_gb) {
+            prefLabel = "1 GB/day plans";
+        } else if (chipId == R.id.chip_pref_validity) {
+            prefLabel = "service validity only";
+        } else if (chipId == R.id.chip_pref_long_term) {
+            prefLabel = "84+ days long term plans";
+        }
+
+        triggerProcessingAnimation("Autonomously comparing " + prefLabel + " with app discounts & UPI cashback...");
+    }
+
+    private void triggerProcessingAnimation(String statusText) {
+        binding.cardProcessingState.setVisibility(View.VISIBLE);
+        binding.tvProcessingStatus.setText(statusText);
+
+        binding.cardProcessingState.postDelayed(() -> {
+            if (binding != null) {
+                binding.cardProcessingState.setVisibility(View.GONE);
+                updateTopDealForOperator(currentSim);
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Smart deal recalculated!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }, 800);
     }
 
     private void updateTopDealForOperator(SimProfileEntity sim) {
         String op = sim.operatorCode != null ? sim.operatorCode.toUpperCase() : "VI";
         binding.tvTopDealHeading.setText("TOP RECOMMENDED DEAL FOR " + op);
-        binding.btnOpenOfficialApp.setText("Check in " + (op.equals("JIO") ? "MyJio App" : op.equals("AIRTEL") ? "Airtel Thanks" : op.equals("BSNL") ? "BSNL Portal" : "Vi App"));
 
         if ("JIO".equals(op)) {
             currentPlanId = "jio_349_popular";
@@ -166,6 +234,7 @@ public class HomeFragment extends Fragment {
             binding.tvPayablePrice.setText("₹349");
             binding.tvEffectivePrice.setText("₹249");
             binding.tvDealStackExplanation.setText("Jio True 5G Pack + Paytm Assured ₹100 Cashback via UPI");
+            binding.tvDealDailyCost.setText("₹349 / 28 days = ₹8.89/day (Save ₹3.57/day)");
         } else if ("AIRTEL".equals(op)) {
             currentPlanId = "airtel_349_popular";
             binding.tvDealBadgeLabel.setText("AIRTEL 5G PLUS");
@@ -176,6 +245,7 @@ public class HomeFragment extends Fragment {
             binding.tvPayablePrice.setText("₹349");
             binding.tvEffectivePrice.setText("₹274");
             binding.tvDealStackExplanation.setText("Airtel 5G Plus + BHIM Payments App up to ₹75 Cashback");
+            binding.tvDealDailyCost.setText("₹349 / 28 days = ₹9.79/day (Save ₹2.68/day)");
         } else if ("BSNL".equals(op)) {
             currentPlanId = "bsnl_199_value";
             binding.tvDealBadgeLabel.setText("BEST VALUE 30 DAYS");
@@ -186,6 +256,7 @@ public class HomeFragment extends Fragment {
             binding.tvPayablePrice.setText("₹199");
             binding.tvEffectivePrice.setText("₹174");
             binding.tvDealStackExplanation.setText("Affordable BSNL Tariff + PhonePe Flat ₹25 Cashback");
+            binding.tvDealDailyCost.setText("₹199 / 30 days = ₹5.80/day (Save ₹0.83/day)");
         } else {
             // Default Vi
             currentPlanId = "vi_349_hero";
@@ -197,6 +268,7 @@ public class HomeFragment extends Fragment {
             binding.tvPayablePrice.setText("₹334");
             binding.tvEffectivePrice.setText("₹209");
             binding.tvDealStackExplanation.setText("Vi App ₹15 Instant Discount + Paytm UPI ₹125 Assured Cashback");
+            binding.tvDealDailyCost.setText("₹349 / 28 days = ₹7.46/day (Save ₹5.00/day)");
         }
     }
 
@@ -272,6 +344,12 @@ public class HomeFragment extends Fragment {
                 349.0,
                 "Check verified " + op + " plans and app-exclusive offers"
         );
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateProviderHandsetStatus();
     }
 
     @Override

@@ -151,32 +151,143 @@
         </com.google.android.material.card.MaterialCardView>
 
         <!-- Official App Live Verification Action Strip -->
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_provider_app_status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_marginBottom="14dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="1dp"
+            app:cardBackgroundColor="@color/surface">
 
-            <TextView
-                android:id="@+id/tv_live_sync_status"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="● Live sync active"
-                android:textColor="@color/savings_green"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:gravity="center_vertical">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_open_official_app"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                <TextView
+                    android:id="@+id/tv_provider_handset_status"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="● Vi App detected on handset"
+                    android:textColor="@color/savings_green_dark"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_provider_handset_action"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="Sync Offers"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Preference Filter Section (Directly from User Workflow Diagram) -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"
+            android:text="YOUR RECHARGE PREFERENCE"
+            android:textColor="@color/on_surface_muted"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:layout_marginBottom="14dp">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_preferences"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Check in Vi App"
-                android:textColor="@color/primary"
-                android:textSize="12sp" />
-        </LinearLayout>
+                app:singleSelection="true"
+                app:selectionRequired="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_pref_all"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="🔥 All Best Deals" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_pref_under_300"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="₹ Under 300" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_pref_1_5_gb"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📶 1.5 GB/day" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_pref_1_gb"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📶 1 GB/day" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_pref_validity"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⏳ Validity Only" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_pref_long_term"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📅 84+ Days" />
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
+
+        <!-- Simulated Processing / Autonomous Surf Progress State (from User Diagram) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_processing_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone"
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="@color/surface">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <TextView
+                    android:id="@+id/tv_processing_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Autonomously surfing offers &amp; calculating best value..."
+                    android:textColor="@color/primary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/progress_processing"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:indeterminate="true" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Flagship Hero: Top Recommended Deal -->
         <TextView
@@ -346,6 +457,37 @@
                     android:text="Vi App ₹15 Instant Discount + Paytm UPI ₹125 Assured Cashback"
                     android:textColor="@color/primary"
                     android:textSize="12sp" />
+
+                <!-- Per-Day Cost Metric Box (as requested in user diagram: 299/28 day = -/- for one day) -->
+                <LinearLayout
+                    android:id="@+id/layout_deal_daily_metric"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@color/savings_green_light"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Per-Day Cost Metric"
+                        android:textColor="@color/savings_green_dark"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_deal_daily_cost"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="₹349 / 28 days = ₹7.46/day"
+                        android:textColor="@color/savings_green_dark"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_inspect_deal"

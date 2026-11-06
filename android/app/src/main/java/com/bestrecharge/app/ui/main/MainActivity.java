@@ -48,6 +48,28 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (com.bestrecharge.app.BestRechargeApp.pendingCelebrationRecord != null) {
+            com.bestrecharge.app.data.local.entities.SavingsRecordEntity rec = com.bestrecharge.app.BestRechargeApp.pendingCelebrationRecord;
+            com.bestrecharge.app.BestRechargeApp.pendingCelebrationRecord = null;
+            int totalSaved = (int) (rec.originalMrp - rec.effectiveCost);
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("🎉 Recharge Completed!")
+                    .setMessage("Congratulations! You saved ₹" + totalSaved + " on your recharge for +91 " + rec.mobileNumber + "!\n\n" +
+                            "• Original MRP: ₹" + (int) rec.originalMrp + "\n" +
+                            "• Amount Paid: ₹" + (int) rec.amountPaid + "\n" +
+                            "• Final Effective Cost: ₹" + (int) rec.effectiveCost + "\n" +
+                            "• Assured Savings: ₹" + totalSaved + "\n\n" +
+                            "Thank you for recharging smartly with BestRecharge! Your transaction is logged in your Savings Tracker.")
+                    .setPositiveButton("View in Savings", (d, w) -> navigateToTab(R.id.navigation_savings))
+                    .setNegativeButton("Done", null)
+                    .setCancelable(false)
+                    .show();
+        }
+    }
+
     public void navigateToTab(int menuItemId) {
         binding.bottomNavigation.setSelectedItemId(menuItemId);
     }

@@ -23,6 +23,7 @@ public class DealBreakdown implements Serializable {
     public String explanation;
     public String actionIntentUri;
     public String actionLabel;
+    public int validityDays = 28;
 
     public DealBreakdown(double originalMrp, double operatorDiscount, double immediatePayable,
                          String recommendedPaymentProvider, double appliedPaymentDiscount,
@@ -52,5 +53,26 @@ public class DealBreakdown implements Serializable {
         this.explanation = explanation;
         this.actionIntentUri = actionIntentUri;
         this.actionLabel = actionLabel;
+        this.validityDays = 28;
+    }
+
+    public double getDailyMrpCost() {
+        int v = validityDays > 0 ? validityDays : 28;
+        return Math.round((originalMrp / v) * 100.0) / 100.0;
+    }
+
+    public double getDailyEffectiveCost() {
+        int v = validityDays > 0 ? validityDays : 28;
+        return Math.round((potentialEffectiveCost / v) * 100.0) / 100.0;
+    }
+
+    public double getDailySavings() {
+        int v = validityDays > 0 ? validityDays : 28;
+        return Math.round(((originalMrp - potentialEffectiveCost) / v) * 100.0) / 100.0;
+    }
+
+    public String getDailyCostComparisonString() {
+        int v = validityDays > 0 ? validityDays : 28;
+        return "₹" + (int) originalMrp + " / " + v + " days = ₹" + String.format(java.util.Locale.US, "%.2f", getDailyEffectiveCost()) + "/day (Save ₹" + String.format(java.util.Locale.US, "%.2f", getDailySavings()) + "/day)";
     }
 }

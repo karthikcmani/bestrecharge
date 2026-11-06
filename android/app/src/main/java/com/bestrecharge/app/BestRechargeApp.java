@@ -14,6 +14,9 @@ import java.util.concurrent.Executors;
 
 public class BestRechargeApp extends Application {
 
+    // Pending savings record waiting for user to return from provider app recharge
+    public static SavingsRecordEntity pendingCelebrationRecord = null;
+
     @Override
     public void onCreate() {
         super.onCreate();

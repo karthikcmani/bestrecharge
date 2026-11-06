@@ -84,6 +84,7 @@ public class BestDealActivity extends AppCompatActivity {
     }
 
     private void bindDeal(DealBreakdown deal, RechargePlanEntity plan) {
+        deal.validityDays = plan.validityDays;
         binding.tvDetailPlanHeader.setText(plan.operatorName + " – ₹" + (int) plan.price);
         binding.tvDetailPlanSpecs.setText(plan.validityDays + " Days • " +
                 (plan.dailyDataGb > 0 ? plan.dailyDataGb + "GB/day" : plan.totalDataGb + "GB Total") +
@@ -97,6 +98,7 @@ public class BestDealActivity extends AppCompatActivity {
         binding.tvRowCashback.setText("+ ₹" + (int) (deal.guaranteedCashback > 0 ? deal.guaranteedCashback : deal.potentialCashback));
         binding.tvRowEffective.setText("₹" + (int) deal.potentialEffectiveCost);
 
+        binding.tvDetailDailyCost.setText(deal.getDailyCostComparisonString());
         binding.tvDetailExplanation.setText(deal.explanation);
         binding.btnContinueToRecharge.setText(deal.actionLabel != null ? deal.actionLabel : "Continue to Recharge");
 
@@ -162,6 +164,7 @@ public class BestDealActivity extends AppCompatActivity {
                             "Initiated via " + opAppName + " with " + deal.recommendedPaymentProvider
                     );
                     new SavingsRepository(getApplication()).insertRecord(record);
+                    com.bestrecharge.app.BestRechargeApp.pendingCelebrationRecord = record;
 
                     // 2. Launch provider app directly to checkout page
                     String promoSummary = "Recharge ₹" + (int) deal.originalMrp + " for +91 " + mobile +
@@ -175,9 +178,34 @@ public class BestDealActivity extends AppCompatActivity {
                             deal.originalMrp,
                             promoSummary
                     );
-                    finish();
                 })
                 .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (com.bestrecharge.app.BestRechargeApp.pendingCelebrationRecord != null) {
+            SavingsRecordEntity rec = com.bestrecharge.app.BestRechargeApp.pendingCelebrationRecord;
+            com.bestrecharge.app.BestRechargeApp.pendingCelebrationRecord = null;
+            showSavingsThankYouDialog(rec);
+        }
+    }
+
+    private void showSavingsThankYouDialog(SavingsRecordEntity rec) {
+        int totalSaved = (int) (rec.originalMrp - rec.effectiveCost);
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("🎉 Recharge Completed!")
+                .setMessage("Congratulations! You saved ₹" + totalSaved + " on your recharge for +91 " + rec.mobileNumber + "!\n\n" +
+                        "• Original MRP: ₹" + (int) rec.originalMrp + "\n" +
+                        "• Amount Paid: ₹" + (int) rec.amountPaid + "\n" +
+                        "• Final Effective Cost: ₹" + (int) rec.effectiveCost + "\n" +
+                        "• Assured Savings: ₹" + totalSaved + "\n\n" +
+                        "Thank you for recharging smartly with BestRecharge! Your transaction is logged in your Savings Tracker.")
+                .setPositiveButton("View in Savings", (d, w) -> finish())
+                .setNegativeButton("Done", (d, w) -> finish())
+                .setCancelable(false)
                 .show();
     }
 }
